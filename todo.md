@@ -258,6 +258,6 @@
 
 ### Tests & Delivery
 - [x] Phase 5 vitest tests: 36 tests (anti-patterns, model guide, ASSESS swarm) — 137/137 total passing
-- [ ] webdev_save_checkpoint — pending
-- [ ] Push to GitHub — pending
-- [ ] Update prompitect-engineer skill with Phase 5 additions — pending
+- [x] webdev_save_checkpoint — version 57080e04
+- [x] Push to GitHub — f841db7..57080e0 pushed to Howie8erHole/Promptwright
+- [x] Update prompitect-engineer skill with Phase 5 additions
