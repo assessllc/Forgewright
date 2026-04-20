@@ -15,6 +15,9 @@ import ExampleLibrary from "./pages/ExampleLibrary";
 import SwarmComposer from "./pages/SwarmComposer";
 import AntiPatternLibrary from "./pages/AntiPatternLibrary";
 import ModelGuide from "./pages/ModelGuide";
+import Diagnose from "./pages/Diagnose";
+import Compare from "./pages/Compare";
+import Insights from "./pages/Insights";
 
 function Router() {
   return (
@@ -31,6 +34,9 @@ function Router() {
       <Route path="/swarm" component={SwarmComposer} />
       <Route path="/antipatterns" component={AntiPatternLibrary} />
       <Route path="/models" component={ModelGuide} />
+      <Route path="/diagnose" component={Diagnose} />
+      <Route path="/compare" component={Compare} />
+      <Route path="/insights" component={Insights} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

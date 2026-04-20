@@ -12,6 +12,9 @@ import {
   Network,
   AlertTriangle,
   Cpu,
+  Stethoscope,
+  BarChart2,
+  Lightbulb,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -33,6 +36,9 @@ const NAV_ITEMS = [
   { href: "/antipatterns", label: "Anti-Patterns", icon: AlertTriangle },
   { href: "/models", label: "Model Guide", icon: Cpu },
   { href: "/sessions", label: "Sessions", icon: History },
+  { href: "/diagnose", label: "Diagnose Output", icon: Stethoscope },
+  { href: "/compare", label: "A/B Compare", icon: BarChart2 },
+  { href: "/insights", label: "Insights", icon: Lightbulb },
 ];
 
 interface AppLayoutProps {

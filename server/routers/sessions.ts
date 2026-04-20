@@ -1,15 +1,16 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { sessions } from "../../drizzle/schema";
-import { eq, desc } from "drizzle-orm";
+import { sessions, scaffoldVersions } from "../../drizzle/schema";
+import { eq, desc, and } from "drizzle-orm";
+import { diffLines } from "diff";
 
 const ScaffoldBlockSchema = z.object({
   id: z.string(),
   label: z.string(),
   content: z.string(),
   enabled: z.boolean(),
-  source: z.enum(["user", "template", "discovery", "reverse", "pattern"]),
+  source: z.enum(["user", "template", "discovery", "reverse", "pattern"]).optional(),
   sourceName: z.string().optional(),
   tokenCount: z.number().optional(),
 });
@@ -39,6 +40,147 @@ function parseSession(r: typeof sessions.$inferSelect) {
     updatedAt: r.updatedAt,
   };
 }
+
+// ─── Version Helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Create a new scaffold version for a session.
+ * All version-creating actions (pattern-apply, diagnosis, rollback, etc.) call this.
+ * Uses full-snapshot strategy for correctness over delta storage.
+ */
+export async function createScaffoldVersion(
+  sessionId: number,
+  blocks: unknown[],
+  createdBy: "user" | "diagnosis" | "pattern-apply" | "swarm-sync" | "discovery" | "reverse" | "rollback",
+  changeSummary: string,
+  parentVersionId?: number
+): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+
+  const existing = await db
+    .select({ versionNumber: scaffoldVersions.versionNumber })
+    .from(scaffoldVersions)
+    .where(eq(scaffoldVersions.sessionId, sessionId))
+    .orderBy(desc(scaffoldVersions.versionNumber))
+    .limit(1);
+
+  const nextVersionNumber = existing.length > 0 ? existing[0].versionNumber + 1 : 1;
+
+  await db.insert(scaffoldVersions).values({
+    sessionId,
+    versionNumber: nextVersionNumber,
+    fullSnapshot: blocks as Record<string, unknown>[],
+    createdBy,
+    changeSummary,
+    parentVersionId: parentVersionId ?? null,
+  });
+
+  return nextVersionNumber;
+}
+
+/**
+ * Compute a per-block diff between two snapshots using Myers diff algorithm.
+ * Source: Myers, E.W. (1986). "An O(ND) difference algorithm and its variations."
+ */
+function computeBlockDiff(
+  snapshotA: Array<{ id: string; content: string; enabled: boolean; label: string }>,
+  snapshotB: Array<{ id: string; content: string; enabled: boolean; label: string }>
+) {
+  const allBlockIds = [
+    ...Array.from(new Set([...snapshotA.map((b) => b.id), ...snapshotB.map((b) => b.id)])),
+  ];
+
+  const blockDiffs = allBlockIds.map((blockId) => {
+    const blockA = snapshotA.find((b) => b.id === blockId);
+    const blockB = snapshotB.find((b) => b.id === blockId);
+
+    if (!blockA && blockB) {
+      return {
+        blockId,
+        label: blockB.label,
+        changeType: "added" as const,
+        enabledChanged: false,
+        enabledA: false,
+        enabledB: blockB.enabled,
+        lineChanges: blockB.content.split("\n").map((text, i) => ({
+          type: "add" as const,
+          lineNumber: i + 1,
+          text,
+        })),
+      };
+    }
+    if (blockA && !blockB) {
+      return {
+        blockId,
+        label: blockA.label,
+        changeType: "removed" as const,
+        enabledChanged: false,
+        enabledA: blockA.enabled,
+        enabledB: false,
+        lineChanges: blockA.content.split("\n").map((text, i) => ({
+          type: "remove" as const,
+          lineNumber: i + 1,
+          text,
+        })),
+      };
+    }
+    if (!blockA || !blockB) {
+      return { blockId, label: "", changeType: "unchanged" as const, enabledChanged: false, enabledA: false, enabledB: false, lineChanges: [] };
+    }
+
+    const contentChanged = blockA.content !== blockB.content;
+    const enabledChanged = blockA.enabled !== blockB.enabled;
+
+    if (!contentChanged && !enabledChanged) {
+      return {
+        blockId,
+        label: blockA.label,
+        changeType: "unchanged" as const,
+        enabledChanged: false,
+        enabledA: blockA.enabled,
+        enabledB: blockB.enabled,
+        lineChanges: [],
+      };
+    }
+
+    const lineDiffs = diffLines(blockA.content, blockB.content);
+    const lineChanges: Array<{ type: "add" | "remove" | "context"; lineNumber: number; text: string }> = [];
+    let lineNumber = 1;
+
+    for (const part of lineDiffs) {
+      const textLines = part.value.endsWith("\n")
+        ? part.value.slice(0, -1).split("\n")
+        : part.value.split("\n");
+      for (const text of textLines) {
+        if (part.added) {
+          lineChanges.push({ type: "add", lineNumber, text });
+          lineNumber++;
+        } else if (part.removed) {
+          lineChanges.push({ type: "remove", lineNumber, text });
+        } else {
+          lineChanges.push({ type: "context", lineNumber, text });
+          lineNumber++;
+        }
+      }
+    }
+
+    return {
+      blockId,
+      label: blockA.label,
+      changeType: "modified" as const,
+      enabledChanged,
+      enabledA: blockA.enabled,
+      enabledB: blockB.enabled,
+      lineChanges,
+    };
+  });
+
+  const changedCount = blockDiffs.filter((b) => b.changeType !== "unchanged").length;
+  return { blockDiffs, changedCount };
+}
+
+// ─── Router ───────────────────────────────────────────────────────────────────
 
 export const sessionsRouter = router({
   list: publicProcedure
@@ -87,6 +229,9 @@ export const sessionsRouter = router({
         totalTokens: z.number().default(0),
         domain: z.string().optional(),
         discoveryData: z.string().optional(),
+        // Phase 6: version history
+        createVersion: z.boolean().optional().default(true),
+        changeSummary: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -106,6 +251,20 @@ export const sessionsRouter = router({
           : null,
       });
       const insertId = (result as unknown as [{ insertId: number }])[0]?.insertId ?? 0;
+
+      // Create initial version snapshot
+      if (input.createVersion && input.blocks.length > 0) {
+        const createdBy = input.mode === "discovery" ? "discovery"
+          : input.mode === "reverse" ? "reverse"
+          : "user";
+        await createScaffoldVersion(
+          insertId,
+          input.blocks,
+          createdBy,
+          input.changeSummary ?? "Initial scaffold created"
+        );
+      }
+
       return { id: insertId };
     }),
 
@@ -119,6 +278,10 @@ export const sessionsRouter = router({
         variants: z.any().optional(),
         totalTokens: z.number().optional(),
         domain: z.string().optional(),
+        // Phase 6: version history
+        createVersion: z.boolean().optional().default(false),
+        createdBy: z.enum(["user", "diagnosis", "pattern-apply", "swarm-sync", "discovery", "reverse", "rollback"]).optional().default("user"),
+        changeSummary: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -132,6 +295,17 @@ export const sessionsRouter = router({
       if (input.totalTokens !== undefined) updateData.totalTokenCount = input.totalTokens;
       if (input.domain !== undefined) updateData.domain = input.domain;
       await db.update(sessions).set(updateData).where(eq(sessions.id, input.id));
+
+      // Create version snapshot if requested
+      if (input.createVersion && input.blocks && input.blocks.length > 0) {
+        await createScaffoldVersion(
+          input.id,
+          input.blocks,
+          input.createdBy ?? "user",
+          input.changeSummary ?? "Scaffold updated"
+        );
+      }
+
       return { success: true };
     }),
 
@@ -190,5 +364,151 @@ export const sessionsRouter = router({
         content: md,
         filename: `promptwright-${session.id}-${Date.now()}.md`,
       };
+    }),
+
+  // ─── Phase 6: Version History ────────────────────────────────────────────────
+
+  /**
+   * List all versions for a session, newest first.
+   * Returns metadata only — no full snapshots (use getVersion for that).
+   */
+  listVersions: publicProcedure
+    .input(z.object({ sessionId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      return db
+        .select({
+          id: scaffoldVersions.id,
+          sessionId: scaffoldVersions.sessionId,
+          versionNumber: scaffoldVersions.versionNumber,
+          createdBy: scaffoldVersions.createdBy,
+          changeSummary: scaffoldVersions.changeSummary,
+          parentVersionId: scaffoldVersions.parentVersionId,
+          createdAt: scaffoldVersions.createdAt,
+        })
+        .from(scaffoldVersions)
+        .where(eq(scaffoldVersions.sessionId, input.sessionId))
+        .orderBy(desc(scaffoldVersions.versionNumber));
+    }),
+
+  /**
+   * Get a specific version's full snapshot.
+   */
+  getVersion: publicProcedure
+    .input(z.object({ sessionId: z.number(), versionNumber: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return null;
+      const rows = await db
+        .select()
+        .from(scaffoldVersions)
+        .where(
+          and(
+            eq(scaffoldVersions.sessionId, input.sessionId),
+            eq(scaffoldVersions.versionNumber, input.versionNumber)
+          )
+        )
+        .limit(1);
+      if (!rows[0]) return null;
+      return rows[0];
+    }),
+
+  /**
+   * Compute a Myers diff between two versions of a session.
+   * Returns per-block diff with line-level add/remove/context annotations.
+   */
+  diffVersions: publicProcedure
+    .input(
+      z.object({
+        sessionId: z.number(),
+        versionA: z.number(),
+        versionB: z.number(),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+
+      const [rowsA, rowsB] = await Promise.all([
+        db
+          .select()
+          .from(scaffoldVersions)
+          .where(
+            and(
+              eq(scaffoldVersions.sessionId, input.sessionId),
+              eq(scaffoldVersions.versionNumber, input.versionA)
+            )
+          )
+          .limit(1),
+        db
+          .select()
+          .from(scaffoldVersions)
+          .where(
+            and(
+              eq(scaffoldVersions.sessionId, input.sessionId),
+              eq(scaffoldVersions.versionNumber, input.versionB)
+            )
+          )
+          .limit(1),
+      ]);
+
+      if (!rowsA[0] || !rowsB[0]) throw new Error("One or both versions not found");
+
+      const snapshotA = rowsA[0].fullSnapshot as Array<{ id: string; content: string; enabled: boolean; label: string }>;
+      const snapshotB = rowsB[0].fullSnapshot as Array<{ id: string; content: string; enabled: boolean; label: string }>;
+
+      return computeBlockDiff(snapshotA, snapshotB);
+    }),
+
+  /**
+   * Roll back a session to a prior version.
+   * Creates a NEW version (never mutates history) with createdBy: "rollback".
+   * Preserves the full audit trail.
+   */
+  rollbackToVersion: publicProcedure
+    .input(
+      z.object({
+        sessionId: z.number(),
+        versionNumber: z.number(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+
+      const rows = await db
+        .select()
+        .from(scaffoldVersions)
+        .where(
+          and(
+            eq(scaffoldVersions.sessionId, input.sessionId),
+            eq(scaffoldVersions.versionNumber, input.versionNumber)
+          )
+        )
+        .limit(1);
+
+      if (!rows[0]) throw new Error("Target version not found");
+
+      const snapshot = rows[0].fullSnapshot as unknown[];
+
+      const newVersionNumber = await createScaffoldVersion(
+        input.sessionId,
+        snapshot,
+        "rollback",
+        `Rolled back to version ${input.versionNumber}`,
+        rows[0].id
+      );
+
+      // Update the live session to match the rolled-back snapshot
+      await db
+        .update(sessions)
+        .set({
+          scaffoldBlocks: JSON.stringify(snapshot),
+          updatedAt: new Date(),
+        })
+        .where(eq(sessions.id, input.sessionId));
+
+      return { newVersionNumber, restoredFromVersion: input.versionNumber };
     }),
 });

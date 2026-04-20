@@ -7,6 +7,9 @@ import { sessionsRouter } from "./routers/sessions";
 import { scaffoldRouter } from "./routers/scaffold";
 import { analysisRouter } from "./routers/analysis";
 import { swarmsRouter } from "./routers/swarms";
+import { diagnosisRouter } from "./routers/diagnosis";
+import { comparisonRouter } from "./routers/comparison";
+import { insightsRouter } from "./routers/insights";
 
 export const appRouter = router({
   system: systemRouter,
@@ -23,6 +26,9 @@ export const appRouter = router({
   scaffold: scaffoldRouter,
   analysis: analysisRouter,
   swarms: swarmsRouter,
+  diagnosis: diagnosisRouter,
+  comparison: comparisonRouter,
+  insights: insightsRouter,
 });
 
 export type AppRouter = typeof appRouter;

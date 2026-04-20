@@ -31,6 +31,8 @@ import {
   Zap,
   Wand2,
   X,
+  History,
+  RotateCcw,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
@@ -234,11 +236,32 @@ export default function ScaffoldBuilder() {
   const [isSaving, setIsSaving] = useState(false);
   const [showHints, setShowHints] = useState(false);
   const [hints, setHints] = useState<Array<{ title: string; description: string; blockId: string; priority: string }>>([]); 
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [patternBanner, setPatternBanner] = useState<{
     patternName: string;
     rationale: string;
     blocksModified: string[];
   } | null>(null);
+
+  // Version history
+  const { data: versionList, refetch: refetchVersions } = trpc.sessions.listVersions.useQuery(
+    { sessionId: sessionId! },
+    { enabled: !!sessionId && showVersionHistory }
+  );
+  const rollbackMutation = trpc.sessions.rollbackToVersion.useMutation();
+
+  async function handleRollback(versionNumber: number) {
+    if (!sessionId) return;
+    try {
+      const result = await rollbackMutation.mutateAsync({ sessionId, versionNumber });
+      toast.success(`Rolled back to version ${versionNumber}`);
+      void refetchVersions();
+      // Reload session data
+      window.location.reload();
+    } catch {
+      toast.error("Rollback failed");
+    }
+  }
 
   // Load session if ID provided
   const { data: sessionData } = trpc.sessions.get.useQuery(
@@ -709,6 +732,63 @@ export default function ScaffoldBuilder() {
               </div>
             )}
           </div>
+
+          {/* Version History */}
+          {sessionId && (
+            <div className="p-4 border-b border-sidebar-border">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-sidebar-foreground uppercase tracking-wider">
+                  Version History
+                </span>
+                <button
+                  onClick={() => setShowVersionHistory(!showVersionHistory)}
+                  className="text-xs text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+                >
+                  <History className="w-3 h-3" />
+                  {showVersionHistory ? "Hide" : "Show"}
+                </button>
+              </div>
+              {showVersionHistory && (
+                <div className="space-y-1.5">
+                  {!versionList ? (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Loading…
+                    </div>
+                  ) : versionList.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No versions saved yet.</p>
+                  ) : (
+                    versionList.slice(0, 10).map((v) => (
+                      <div
+                        key={v.versionNumber}
+                        className="flex items-center justify-between gap-2 rounded-md p-2 bg-muted/30 hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-mono text-primary">v{v.versionNumber}</span>
+                            <span className="text-xs text-muted-foreground truncate">{v.changeSummary}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground/60">
+                            {new Date(v.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 flex-shrink-0"
+                          onClick={() => void handleRollback(v.versionNumber)}
+                          disabled={rollbackMutation.isPending}
+                          title={`Rollback to v${v.versionNumber}`}
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Export options */}
           <div className="p-4 mt-auto">

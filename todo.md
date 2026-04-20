@@ -261,3 +261,43 @@
 - [x] webdev_save_checkpoint — version 57080e04
 - [x] Push to GitHub — f841db7..57080e0 pushed to Howie8erHole/Promptwright
 - [x] Update prompitect-engineer skill with Phase 5 additions
+
+## Phase 6 — Feedback Loop & Personal Learning
+
+### Feature 3: Version History
+- [x] scaffold_versions table: sessionId, versionNumber, fullSnapshot (JSON), createdBy (enum), changeSummary, parentVersionId, createdAt
+- [x] createScaffoldVersion() helper exported from sessions router — called on create, update (when createVersion=true), rollback
+- [x] listVersions tRPC procedure: returns versions for a session, newest first
+- [x] getVersion tRPC procedure: returns full snapshot for a specific version
+- [x] diffVersions tRPC procedure: Myers diff (via `diff` package) per-block between any two versions
+- [x] rollbackToVersion tRPC procedure: creates new version with createdBy="rollback" (non-destructive)
+- [x] Version History panel in ScaffoldBuilder sidebar: show/hide toggle, list up to 10 versions, rollback button per version
+- [x] Migration 0005 includes scaffold_versions table
+
+### Feature 1: Output Diagnosis
+- [x] 25 diagnosis patterns seeded (seed-diagnosis-patterns.mjs) — real failure modes grounded in published research
+- [x] 10 categories: reasoning-drift, hallucination, format-drift, persona-drift, scope-drift, refusal-drift, instruction-drift, output-quality, structural-drift, task-specific
+- [x] diagnosis_patterns table: slug, name, category, severity, description, detectionHeuristics (JSON), canonicalRemediation, primaryAffectedBlock, exampleOutputExcerpt, suggestedBlockEdits (JSON)
+- [x] diagnoses table: sessionId, outputText, promptText, diagnosisJson (JSON), editAcceptance (JSON), createdAt
+- [x] getDiagnosisPatterns, getDiagnosisPattern, getDiagnosisCategories, createDiagnosis, getDiagnoses, updateDiagnosisAcceptance tRPC procedures
+- [x] /api/stream/diagnose SSE endpoint: streams LLM diagnosis with structured JSON output
+- [x] Diagnose page (/diagnose): paste output text, select session, stream diagnosis, show matched patterns, suggested edits with accept/dismiss
+- [x] Diagnosis Library tab: browse all 25 patterns by category and severity
+
+### Feature 2: A/B Comparison
+- [x] comparison_runs table: sessionId, inputText, variantALabel/Prompt/Output, variantBLabel/Prompt/Output, targetModel, createdAt
+- [x] comparison_verdicts table: comparisonRunId (unique), preference (a/b/tie/both-bad), reasonTags (JSON), notes, createdAt
+- [x] createComparisonRun, updateComparisonOutputs, recordVerdict, listComparisonRuns, getWinRates tRPC procedures
+- [x] /api/stream/compare SSE endpoint: streams LLM output for a single variant
+- [x] Compare page (/compare): enter input + two variant prompts, stream both outputs side-by-side, record verdict with reason tags, view win rate history
+
+### Feature 4: Personal Pattern Learning
+- [x] 12 insight rules: DOMINANT_FAILURE_MODE, PREFERRED_VARIANT, ACCEPTED_PATTERN, AVOIDED_ANTIPATTERN, MODEL_AFFINITY, DIAGNOSIS_ACCEPTANCE, VERSION_CHURN, ROLLBACK_FREQUENCY, DOMAIN_CONCENTRATION, REASONING_BLOCK_USAGE, FORMAT_BLOCK_USAGE, SESSION_COMPLETION_RATE
+- [x] getInsights tRPC: aggregates across sessions/diagnoses/comparisons/versions, returns typed Insight[] with confidence and dataQuality
+- [x] Insights page (/insights): cards per insight with confidence badge, evidence list, actionable recommendation, data quality indicator
+- [x] Nav items added: Diagnose Output (Stethoscope), A/B Compare (BarChart2), Insights (Lightbulb)
+
+### Tests & Delivery
+- [x] Phase 6 vitest tests: 57 tests — all pass (DB tests skip gracefully without DATABASE_URL)
+- [x] TypeScript strict mode: zero errors
+- [x] Full test suite: 158 pass, 36 skip (phase5 DB tests skip without DB — pre-existing)

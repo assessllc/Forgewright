@@ -35,6 +35,16 @@ interface ReverseStreamBody {
   text: string;
 }
 
+interface DiagnoseStreamBody {
+  outputText: string;
+  promptText?: string;
+}
+
+interface CompareStreamBody {
+  inputText: string;
+  variantPrompt: string;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function resolveApiUrl(): string {
@@ -244,9 +254,105 @@ async function handleReverseStream(req: Request, res: Response): Promise<void> {
   await streamLLM(res, REVERSE_SYSTEM_PROMPT, userMessages);
 }
 
+// ─── Diagnose Output Streaming ───────────────────────────────────────────────
+
+const DIAGNOSE_SYSTEM_PROMPT = `You are a senior prompt engineer specializing in output quality diagnosis.
+You will be given an LLM output (and optionally the prompt that produced it).
+Your task is to diagnose output quality failures using a structured analysis framework.
+
+Analyze the output along these dimensions:
+1. reasoning-drift: shallow reasoning, circular logic, false precision
+2. hallucination: fabricated entities, temporal errors, invented citations
+3. format-drift: length violations, structure violations, markdown bleed
+4. persona-drift: role abandonment, tone inconsistency
+5. scope-drift: scope creep, task underfulfillment
+6. refusal-drift: overcautious refusal, caveat flooding
+7. instruction-drift: instruction forgetting, constraint violation
+8. output-quality: generic output, sycophantic agreement, confidence miscalibration
+9. structural-drift: list flattening, context truncation
+10. task-specific: code without explanation, translation register mismatch
+
+For each detected failure, provide the exact failure mode slug, the specific text that triggered it, the affected scaffold block, and a concrete remediation.
+
+Respond ONLY with a valid JSON object:
+{
+  "overallQuality": "good" | "acceptable" | "poor",
+  "summary": "2-3 sentence plain English summary of the main issues",
+  "driftMap": { "category-name": count },
+  "issues": [
+    {
+      "id": "unique-id",
+      "failureMode": "exact-slug",
+      "category": "category-name",
+      "severity": "low" | "medium" | "high",
+      "title": "Short title",
+      "explanation": "What specifically is wrong in this output",
+      "affectedBlock": "role" | "context" | "task" | "constraints" | "format" | "reasoning" | "output_validation",
+      "remediation": "Specific scaffold edit to fix this",
+      "matchedText": "The specific text in the output that triggered this diagnosis"
+    }
+  ],
+  "positives": ["What the output does well"]
+}`;
+
+async function handleDiagnoseStream(req: Request, res: Response): Promise<void> {
+  const body = req.body as DiagnoseStreamBody;
+  const outputText = body.outputText?.trim();
+  if (!outputText || outputText.length < 20) {
+    res.status(400).json({ error: "outputText must be at least 20 characters" });
+    return;
+  }
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders();
+
+  const contextSection = body.promptText
+    ? `\n\nThe prompt that produced this output:\n<prompt>\n${body.promptText}\n</prompt>`
+    : "";
+
+  const userMessages: StreamMessage[] = [
+    {
+      role: "user",
+      content: `Diagnose the quality failures in this LLM output:${contextSection}\n\n<output>\n${outputText}\n</output>`,
+    },
+  ];
+
+  await streamLLM(res, DIAGNOSE_SYSTEM_PROMPT, userMessages);
+}
+
+// ─── Compare Variant Streaming ────────────────────────────────────────────────
+
+async function handleCompareStream(req: Request, res: Response): Promise<void> {
+  const body = req.body as CompareStreamBody;
+  const inputText = body.inputText?.trim();
+  const variantPrompt = body.variantPrompt?.trim();
+  if (!inputText || !variantPrompt) {
+    res.status(400).json({ error: "inputText and variantPrompt are required" });
+    return;
+  }
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders();
+
+  // The variant prompt is the system prompt; inputText is the user message
+  const userMessages: StreamMessage[] = [
+    { role: "user", content: inputText },
+  ];
+
+  await streamLLM(res, variantPrompt, userMessages);
+}
+
 // ─── Registration ─────────────────────────────────────────────────────────────
 
 export function registerStreamingRoutes(app: Express): void {
   app.post("/api/stream/discovery", handleDiscoveryStream);
   app.post("/api/stream/reverse", handleReverseStream);
+  app.post("/api/stream/diagnose", handleDiagnoseStream);
+  app.post("/api/stream/compare", handleCompareStream);
 }
