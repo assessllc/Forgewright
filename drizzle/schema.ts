@@ -216,3 +216,30 @@ export const examplePrompts = mysqlTable("example_prompts", {
 });
 export type ExamplePrompt = typeof examplePrompts.$inferSelect;
 export type InsertExamplePrompt = typeof examplePrompts.$inferInsert;
+
+// ─── Swarm Templates ──────────────────────────────────────────────────────────
+// Pre-built multi-agent swarm configurations.
+// Each template defines a topology and a set of agent roles with system prompts.
+export const swarmTemplates = mysqlTable("swarm_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  slug: varchar("slug", { length: 64 }).notNull().unique(),
+  name: varchar("name", { length: 128 }).notNull(),
+  description: text("description").notNull(),
+  useCase: text("useCase").notNull(),
+  topology: mysqlEnum("topology", ["sequential", "parallel", "hub-spoke", "hierarchical", "iterative"]).notNull(),
+  // JSON: SwarmAgent[] — { id, name, role, systemPrompt, inputFrom, outputTo, handoffCondition }
+  agents: json("agents").notNull(),
+  // JSON: string[] — compatible platforms (Manus, AutoGen, CrewAI, LangGraph, OpenAI Swarm)
+  compatiblePlatforms: json("compatiblePlatforms"),
+  // JSON: string[] — business domains this applies to
+  domains: json("domains"),
+  agentCount: int("agentCount").notNull(),
+  difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate"),
+  isFeatured: boolean("isFeatured").default(false),
+  sourceNote: text("sourceNote"),
+  sortOrder: int("sortOrder").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SwarmTemplate = typeof swarmTemplates.$inferSelect;
+export type InsertSwarmTemplate = typeof swarmTemplates.$inferInsert;

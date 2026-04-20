@@ -196,7 +196,7 @@ function ExampleDetailDialog({
   function useInScaffold() {
     // Store the example prompt text in sessionStorage so ScaffoldBuilder can pick it up
     sessionStorage.setItem(
-      "prompitect_prefill",
+      "promptwright_prefill",
       JSON.stringify({
         source: "example",
         title: example!.title,

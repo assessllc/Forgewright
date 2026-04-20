@@ -12,6 +12,7 @@ import ReverseMode from "./pages/ReverseMode";
 import PatternLibrary from "./pages/PatternLibrary";
 import Sessions from "./pages/Sessions";
 import ExampleLibrary from "./pages/ExampleLibrary";
+import SwarmComposer from "./pages/SwarmComposer";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/patterns" component={PatternLibrary} />
       <Route path="/sessions" component={Sessions} />
       <Route path="/examples" component={ExampleLibrary} />
+      <Route path="/swarm" component={SwarmComposer} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

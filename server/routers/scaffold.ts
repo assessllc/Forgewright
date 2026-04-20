@@ -7,7 +7,8 @@ const ScaffoldBlockSchema = z.object({
   label: z.string(),
   content: z.string(),
   enabled: z.boolean(),
-  source: z.enum(["user", "template", "discovery", "reverse"]),
+  source: z.enum(["user", "template", "discovery", "reverse", "pattern"]),
+  sourceName: z.string().optional(),
   tokenCount: z.number().optional(),
 });
 
@@ -381,16 +382,27 @@ Return JSON with this exact structure:
       const content4 = typeof rawContent4 === "string" ? rawContent4 : null;
       if (!content4) throw new Error("No response from LLM");
 
-      return JSON.parse(content4) as {
+      const parsed = JSON.parse(content4) as {
         blocks: Array<{
           id: string;
           label: string;
           content: string;
           enabled: boolean;
           source: string;
+          sourceName?: string;
         }>;
         rationale: string;
         blocksModified: string[];
       };
+
+      // Stamp provenance: blocks that were modified get source="pattern" and sourceName=patternName
+      const modifiedSet = new Set(parsed.blocksModified);
+      parsed.blocks = parsed.blocks.map((b) =>
+        modifiedSet.has(b.id)
+          ? { ...b, source: "pattern", sourceName: input.patternName }
+          : b
+      );
+
+      return parsed;
     }),
 });

@@ -1,4 +1,4 @@
-# Prompitect — Project TODO
+# Promptwright — Project TODO
 
 ## Schema & Database
 - [x] Define schema: sessions, scaffold_blocks, prompt_patterns, anti_patterns, model_quirks, domain_scripts
@@ -146,3 +146,38 @@
 - [x] Created private GitHub repository: https://github.com/Howie8erHole/prompitect
 - [x] Pushed full codebase (216 objects, 371 KB)
 - [x] Created prompitect-engineer skill with full workflow documentation
+
+## Phase 3 — Current Sprint
+
+### Naming
+- [x] Evaluate "Prompitect" vs alternatives; renamed to Promptwright
+
+### Scaffold Builder — Provenance Badges
+- [x] Render source field on ScaffoldBlock as a small colored tag in block header
+- [x] Badge shows pattern name or template name that originated the block (sourceName field)
+- [x] Badge only visible when source field is non-empty
+
+### Pattern Library — Auto-Navigate After Apply
+- [x] After applyPattern succeeds, redirect directly to /scaffold/:sessionId
+- [x] Remove toast-only feedback; replaced with navigation + rationale banner in scaffold builder
+
+### Example Count Expansion
+- [x] 108 examples confirmed seeded across 12 domains — spec met (was already complete from Phase 2)
+
+### Swarm Prompt Generator
+- [x] New page: /swarm — "Swarm Composer" in sidebar nav
+- [x] Template browser: 8 real swarm templates with topology filter and search
+- [x] Agent viewer: expandable agent cards with full system prompts
+- [x] Topology diagrams: visual flow for sequential, parallel, hub-spoke, hierarchical, iterative
+- [x] Export: copy individual agent prompts, copy full swarm, download .md briefing
+- [x] How-to-use tab with 5-step deployment guide
+- [x] swarm_templates table: schema + migration applied
+- [x] 8 real swarm templates seeded (content pipeline, software dev, market research, customer support, prompt refinement, sales intel, legal review, business ops)
+- [x] getSwarmTemplates tRPC procedure in knowledge router
+
+### README
+- [x] README.md written: feature overview, knowledge base inventory table, research foundation, tech stack, setup guide, project status table
+
+### Tests
+- [x] Vitest tests: rename verification, SwarmAgent type structure, swarm templates DB integrity, provenance badge logic, export document format
+- [x] 77/77 tests passing

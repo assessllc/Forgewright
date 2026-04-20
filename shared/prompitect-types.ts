@@ -40,9 +40,25 @@ export interface ScaffoldBlock {
   label: string;
   content: string;
   enabled: boolean;
-  source: "user" | "template" | "discovery" | "reverse";
+  source: "user" | "template" | "discovery" | "reverse" | "pattern";
+  /** Human-readable name of the pattern, template, or workflow that originated this block */
+  sourceName?: string;
   tokenCount?: number;
 }
+
+// ─── Swarm Types ─────────────────────────────────────────────────────────────
+
+export interface SwarmAgent {
+  id: string;
+  name: string;
+  role: string;
+  systemPrompt: string;
+  inputFrom: string | string[];
+  outputTo: string;
+  handoffCondition: string;
+}
+
+export type SwarmTopology = "sequential" | "parallel" | "hub-spoke" | "hierarchical" | "iterative";
 
 // ─── Model Types ─────────────────────────────────────────────────────────────
 

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
+import type { SwarmAgent } from "../../shared/prompitect-types";
 import {
   promptPatterns,
   antiPatterns,
@@ -8,6 +9,7 @@ import {
   domainScripts,
   quickStartTemplates,
   examplePrompts,
+  swarmTemplates,
 } from "../../drizzle/schema";
 import { eq, asc } from "drizzle-orm";
 
@@ -245,6 +247,75 @@ export const knowledgeRouter = router({
         ...rows[0],
         testedModels: safeJson<string[]>(rows[0].testedModels),
         secondaryPatterns: safeJson<string[]>(rows[0].secondaryPatterns),
+        isFeatured: Boolean(rows[0].isFeatured),
+      };
+    }),
+
+  // ── Swarm Templates ──────────────────────────────────────────────────────────────────────────────
+  getSwarmTemplates: publicProcedure
+    .input(
+      z.object({
+        topology: z.enum(["sequential", "parallel", "hub-spoke", "hierarchical", "iterative"]).optional(),
+        domain: z.string().optional(),
+        featured: z.boolean().optional(),
+        search: z.string().optional(),
+      }).optional()
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db
+        .select()
+        .from(swarmTemplates)
+        .orderBy(asc(swarmTemplates.sortOrder));
+      let results = rows;
+      if (input?.topology) {
+        results = results.filter((r) => r.topology === input.topology);
+      }
+      if (input?.featured) {
+        results = results.filter((r) => Boolean(r.isFeatured));
+      }
+      if (input?.domain) {
+        const d = input.domain.toLowerCase();
+        results = results.filter((r) => {
+          const domains = safeJson<string[]>(r.domains);
+          return domains.some((dom) => dom.toLowerCase().includes(d));
+        });
+      }
+      if (input?.search) {
+        const q = input.search.toLowerCase();
+        results = results.filter(
+          (r) =>
+            r.name.toLowerCase().includes(q) ||
+            r.description.toLowerCase().includes(q) ||
+            r.useCase.toLowerCase().includes(q)
+        );
+      }
+      return results.map((r) => ({
+        ...r,
+        agents: safeJson<SwarmAgent[]>(r.agents),
+        compatiblePlatforms: safeJson<string[]>(r.compatiblePlatforms),
+        domains: safeJson<string[]>(r.domains),
+        isFeatured: Boolean(r.isFeatured),
+      }));
+    }),
+
+  getSwarmTemplate: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return null;
+      const rows = await db
+        .select()
+        .from(swarmTemplates)
+        .where(eq(swarmTemplates.slug, input.slug))
+        .limit(1);
+      if (!rows[0]) return null;
+      return {
+        ...rows[0],
+        agents: safeJson<SwarmAgent[]>(rows[0].agents),
+        compatiblePlatforms: safeJson<string[]>(rows[0].compatiblePlatforms),
+        domains: safeJson<string[]>(rows[0].domains),
         isFeatured: Boolean(rows[0].isFeatured),
       };
     }),

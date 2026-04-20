@@ -80,7 +80,7 @@ export default function Sessions() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `prompitect-${session.id}.${format === "json" ? "json" : "md"}`;
+    a.download = `promptwright-${session.id}.${format === "json" ? "json" : "md"}`;
     a.click();
     URL.revokeObjectURL(url);
   }

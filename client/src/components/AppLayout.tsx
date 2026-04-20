@@ -9,6 +9,7 @@ import {
   BookOpen,
   History,
   Zap,
+  Network,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { href: "/patterns", label: "Pattern Library", icon: BookOpen },
   { href: "/examples", label: "Example Library", icon: GitBranch },
   { href: "/reverse", label: "Reverse Mode", icon: FlipHorizontal },
+  { href: "/swarm", label: "Swarm Composer", icon: Network },
   { href: "/sessions", label: "Sessions", icon: History },
 ];
 
@@ -50,7 +52,7 @@ export default function AppLayout({ children, title, actions }: AppLayoutProps) 
               <Zap className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="hidden lg:block font-semibold text-sm text-foreground truncate">
-              Prompitect
+              Promptwright
             </span>
           </Link>
         </div>

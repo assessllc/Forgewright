@@ -29,6 +29,8 @@ import {
   ChevronUp,
   Lightbulb,
   Zap,
+  Wand2,
+  X,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
@@ -126,19 +128,35 @@ function ScaffoldBlockCard({
           {block.label}
         </span>
 
-        {/* Source badge */}
+        {/* Provenance badge — shows source type and name when available */}
         {block.source !== "user" && (
-          <Badge
-            variant="outline"
-            className={cn(
-              "text-xs border-0 px-1.5",
-              block.source === "discovery" && "bg-primary/10 text-primary",
-              block.source === "template" && "bg-green-500/10 text-green-400",
-              block.source === "reverse" && "bg-amber-500/10 text-amber-400"
-            )}
-          >
-            {block.source}
-          </Badge>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "text-xs border-0 px-1.5 cursor-default max-w-[120px] truncate",
+                  block.source === "discovery" && "bg-primary/10 text-primary",
+                  block.source === "template" && "bg-green-500/10 text-green-400",
+                  block.source === "reverse" && "bg-amber-500/10 text-amber-400",
+                  block.source === "pattern" && "bg-violet-500/10 text-violet-400"
+                )}
+              >
+                {block.sourceName ?? block.source}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs max-w-xs">
+              {block.source === "pattern" && block.sourceName
+                ? `Applied from pattern: ${block.sourceName}`
+                : block.source === "template" && block.sourceName
+                ? `From template: ${block.sourceName}`
+                : block.source === "discovery"
+                ? "Generated during Discovery intake"
+                : block.source === "reverse"
+                ? "Inferred from Reverse Mode analysis"
+                : block.source}
+            </TooltipContent>
+          </Tooltip>
         )}
 
         {/* Token count */}
@@ -215,7 +233,12 @@ export default function ScaffoldBuilder() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showHints, setShowHints] = useState(false);
-  const [hints, setHints] = useState<Array<{ title: string; description: string; blockId: string; priority: string }>>([]);
+  const [hints, setHints] = useState<Array<{ title: string; description: string; blockId: string; priority: string }>>([]); 
+  const [patternBanner, setPatternBanner] = useState<{
+    patternName: string;
+    rationale: string;
+    blocksModified: string[];
+  } | null>(null);
 
   // Load session if ID provided
   const { data: sessionData } = trpc.sessions.get.useQuery(
@@ -248,22 +271,33 @@ export default function ScaffoldBuilder() {
     }
   }, [templateData]);
 
+  // Show rationale banner if arriving from a pattern apply
+  useEffect(() => {
+    const stored = sessionStorage.getItem("promptwright_apply_rationale");
+    if (stored) {
+      try {
+        setPatternBanner(JSON.parse(stored) as { patternName: string; rationale: string; blocksModified: string[] });
+      } catch { /* ignore */ }
+      sessionStorage.removeItem("promptwright_apply_rationale");
+    }
+  }, []);
+
   // Load initial prompt from sessionStorage (from Home page)
   useEffect(() => {
     if (!sessionId && !templateSlug) {
-      const initialPrompt = sessionStorage.getItem("prompitect_initial_prompt");
-      const initialModel = sessionStorage.getItem("prompitect_target_model");
+      const initialPrompt = sessionStorage.getItem("promptwright_initial_prompt");
+      const initialModel = sessionStorage.getItem("promptwright_target_model");
       if (initialPrompt) {
         setBlocks((prev) =>
           prev.map((b) =>
             b.id === "task" ? { ...b, content: initialPrompt, enabled: true } : b
           )
         );
-        sessionStorage.removeItem("prompitect_initial_prompt");
+        sessionStorage.removeItem("promptwright_initial_prompt");
       }
       if (initialModel) {
         setTargetModel(initialModel as SupportedModel);
-        sessionStorage.removeItem("prompitect_target_model");
+        sessionStorage.removeItem("promptwright_target_model");
       }
     }
   }, [sessionId, templateSlug]);
@@ -382,7 +416,7 @@ export default function ScaffoldBuilder() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `prompitect-${Date.now()}.${format === "json" ? "json" : "md"}`;
+    a.download = `promptwright-${Date.now()}.${format === "json" ? "json" : "md"}`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -461,6 +495,41 @@ export default function ScaffoldBuilder() {
       <div className="flex h-full overflow-hidden" style={{ height: "calc(100vh - 3.5rem)" }}>
         {/* Main scaffold area */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {/* Pattern apply rationale banner */}
+          {patternBanner && (
+            <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 px-4 py-3 flex items-start gap-3">
+              <Wand2 className="w-4 h-4 text-violet-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-semibold text-violet-400">
+                    Pattern Applied: {patternBanner.patternName}
+                  </span>
+                  {patternBanner.blocksModified.length > 0 && (
+                    <div className="flex gap-1 flex-wrap">
+                      {patternBanner.blocksModified.map((b) => (
+                        <span
+                          key={b}
+                          className="text-xs bg-violet-500/10 text-violet-300 rounded px-1.5 py-0.5 capitalize"
+                        >
+                          {b.replace("_", " ")}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {patternBanner.rationale}
+                </p>
+              </div>
+              <button
+                onClick={() => setPatternBanner(null)}
+                className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                aria-label="Dismiss"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
           {blocks.map((block, index) => (
             <ScaffoldBlockCard
               key={block.id}

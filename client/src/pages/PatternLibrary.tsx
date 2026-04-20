@@ -46,8 +46,6 @@ import {
   ExternalLink,
   Loader2,
   Wand2,
-  Zap,
-  CheckCircle2,
   PlusCircle,
 } from "lucide-react";
 import type { ScaffoldBlock } from "../../../shared/prompitect-types";
@@ -103,11 +101,6 @@ function ApplyPatternDialog({ pattern, onClose }: ApplyPatternDialogProps) {
   const [, navigate] = useLocation();
   const [selectedSessionId, setSelectedSessionId] = useState<string>("");
   const [isApplying, setIsApplying] = useState(false);
-  const [appliedResult, setAppliedResult] = useState<{
-    blocksModified: string[];
-    rationale: string;
-    sessionId: number;
-  } | null>(null);
 
   const rawSessionsData = trpc.sessions.list.useQuery(
     { limit: 50 },
@@ -167,11 +160,21 @@ function ApplyPatternDialog({ pattern, onClose }: ApplyPatternDialogProps) {
         blocks: result.blocks as Parameters<typeof updateSessionMutation.mutateAsync>[0]["blocks"],
       });
 
-      setAppliedResult({
-        blocksModified: result.blocksModified,
-        rationale: result.rationale,
-        sessionId: targetSessionId,
-      });
+      // Store rationale in sessionStorage so ScaffoldBuilder can show it as a banner
+      if (result.rationale) {
+        sessionStorage.setItem(
+          "promptwright_apply_rationale",
+          JSON.stringify({
+            patternName: pattern.name,
+            rationale: result.rationale,
+            blocksModified: result.blocksModified,
+          })
+        );
+      }
+
+      // Navigate directly to scaffold builder — no intermediate success screen
+      onClose();
+      navigate(`/scaffold/${targetSessionId}`);
     } catch {
       toast.error("Failed to apply pattern. Please try again.");
     } finally {
@@ -179,15 +182,7 @@ function ApplyPatternDialog({ pattern, onClose }: ApplyPatternDialogProps) {
     }
   }
 
-  function handleOpenScaffold() {
-    if (appliedResult) {
-      navigate(`/scaffold/${appliedResult.sessionId}`);
-    }
-    onClose();
-  }
-
   function handleClose() {
-    setAppliedResult(null);
     setSelectedSessionId("");
     onClose();
   }
@@ -195,8 +190,7 @@ function ApplyPatternDialog({ pattern, onClose }: ApplyPatternDialogProps) {
   return (
     <Dialog open={!!pattern} onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent className="bg-card border-border max-w-lg">
-        {!appliedResult ? (
-          <>
+        <>
             <DialogHeader>
               <DialogTitle className="text-foreground flex items-center gap-2">
                 <Wand2 className="w-4 h-4 text-primary" />
@@ -302,66 +296,6 @@ function ApplyPatternDialog({ pattern, onClose }: ApplyPatternDialogProps) {
               </Button>
             </DialogFooter>
           </>
-        ) : (
-          /* Success state */
-          <>
-            <DialogHeader>
-              <DialogTitle className="text-foreground flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-400" />
-                Pattern Applied
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground">
-                The scaffold has been updated with the {pattern?.name} pattern.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 py-2">
-              {/* Rationale */}
-              <div className="rounded-lg bg-card border border-border p-4 space-y-2">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  What Changed
-                </p>
-                <p className="text-sm text-foreground leading-relaxed">
-                  {appliedResult.rationale}
-                </p>
-              </div>
-
-              {/* Modified blocks */}
-              {appliedResult.blocksModified.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Blocks Modified
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {appliedResult.blocksModified.map((blockId) => (
-                      <Badge
-                        key={blockId}
-                        variant="outline"
-                        className="text-xs border-primary/30 text-primary bg-primary/5 capitalize"
-                      >
-                        {blockId.replace("_", " ")}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <DialogFooter className="gap-2">
-              <Button
-                variant="outline"
-                onClick={handleClose}
-                className="border-border"
-              >
-                Stay Here
-              </Button>
-              <Button onClick={handleOpenScaffold} className="gap-2">
-                <Zap className="w-4 h-4" />
-                Open Scaffold Builder
-              </Button>
-            </DialogFooter>
-          </>
-        )}
       </DialogContent>
     </Dialog>
   );

@@ -22,6 +22,13 @@
       "when": 1776664666482,
       "tag": "0002_nappy_korath",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1776669702693,
+      "tag": "0003_fresh_archangel",
+      "breakpoints": true
     }
   ]
 }

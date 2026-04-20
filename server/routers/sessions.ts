@@ -9,7 +9,8 @@ const ScaffoldBlockSchema = z.object({
   label: z.string(),
   content: z.string(),
   enabled: z.boolean(),
-  source: z.enum(["user", "template", "discovery", "reverse"]),
+  source: z.enum(["user", "template", "discovery", "reverse", "pattern"]),
+  sourceName: z.string().optional(),
   tokenCount: z.number().optional(),
 });
 
@@ -160,7 +161,7 @@ export const sessionsRouter = router({
         return {
           format: "json" as const,
           content: JSON.stringify(session, null, 2),
-          filename: `prompitect-${session.id}-${Date.now()}.json`,
+          filename: `promptwright-${session.id}-${Date.now()}.json`,
         };
       }
 
@@ -187,7 +188,7 @@ export const sessionsRouter = router({
       return {
         format: "markdown" as const,
         content: md,
-        filename: `prompitect-${session.id}-${Date.now()}.md`,
+        filename: `promptwright-${session.id}-${Date.now()}.md`,
       };
     }),
 });

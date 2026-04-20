@@ -1,5 +1,5 @@
 /**
- * Main seed runner for Prompitect knowledge base.
+ * Main seed runner for Promptwright knowledge base.
  * Run: node scripts/seed.mjs
  */
 
