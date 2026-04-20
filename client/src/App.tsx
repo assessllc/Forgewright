@@ -13,6 +13,8 @@ import PatternLibrary from "./pages/PatternLibrary";
 import Sessions from "./pages/Sessions";
 import ExampleLibrary from "./pages/ExampleLibrary";
 import SwarmComposer from "./pages/SwarmComposer";
+import AntiPatternLibrary from "./pages/AntiPatternLibrary";
+import ModelGuide from "./pages/ModelGuide";
 
 function Router() {
   return (
@@ -27,6 +29,8 @@ function Router() {
       <Route path="/sessions" component={Sessions} />
       <Route path="/examples" component={ExampleLibrary} />
       <Route path="/swarm" component={SwarmComposer} />
+      <Route path="/antipatterns" component={AntiPatternLibrary} />
+      <Route path="/models" component={ModelGuide} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

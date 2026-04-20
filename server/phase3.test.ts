@@ -110,10 +110,10 @@ describe("Swarm Templates: database integrity", () => {
     if (conn) await conn.end();
   });
 
-  it("swarm_templates table exists and has 8 rows", async () => {
+  it("swarm_templates table exists and has 9 rows (8 original + ASSESS)", async () => {
     if (!DATABASE_URL) return;
     const [rows] = await conn.execute("SELECT COUNT(*) as cnt FROM swarm_templates") as [Array<{cnt: number}>, unknown];
-    expect(rows[0].cnt).toBe(8);
+    expect(rows[0].cnt).toBe(9);
   });
 
   it("all 5 topology types are represented", async () => {

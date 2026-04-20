@@ -218,3 +218,46 @@
 ### Tests
 - [x] Phase 4 vitest tests: 22 tests covering swarms router, agent structure, export format, ASSESS LLC branding, seed data correctness, SwarmBuilder component
 - [x] 99/99 tests passing
+
+## Phase 5 — Completed
+
+### Feature 1: Anti-Pattern Library Page (/antipatterns)
+- [x] New page: /antipatterns — "Anti-Patterns" in sidebar nav (AlertTriangle icon)
+- [x] Browse all 32 anti-patterns with name, severity badge, description
+- [x] Filter by severity (low / medium / high) and category (12 categories)
+- [x] Search by name and description
+- [x] Detail panel: full description, detection hint, detection rules, examples, remediation, fixedByPatterns
+- [x] Severity color coding: low=blue, medium=amber, high=red
+- [x] Link from anti-pattern to relevant patterns in Pattern Library
+- [x] getAntiPatterns tRPC procedure verified and working
+
+### Feature 2: Model Quirks Comparison Page (/models)
+- [x] New page: /models — "Model Guide" in sidebar nav (Cpu icon)
+- [x] Overview cards for all 8 models (Claude 3.5 Sonnet, Claude 3 Opus, GPT-4o, GPT-4o mini, o1, Gemini 1.5 Pro, Mistral Large, Llama 3 70B)
+- [x] Side-by-side comparison table: pricing, context window, streaming, JSON mode, vision, system prompt support
+- [x] Per-model detail view: strengths, weaknesses, optimization tips, pricing breakdown
+- [x] "Best for" tags per model (reasoning, creative, code, speed, cost)
+- [x] Cost calculator: enter token count, see cost across all models
+- [x] getModelQuirks tRPC procedure verified and working
+
+### Feature 3: ASSESS Business Swarm Template
+- [x] 11-agent hub-spoke swarm named "ASSESS Business Operations Command" (1 orchestrator + 10 specialists)
+- [x] Orchestrator: receives business goal, routes to appropriate specialist
+- [x] Niche Finder: identifies underserved market segments and opportunities
+- [x] Lead Generator: researches and qualifies prospects by ICP criteria
+- [x] Analytics Lead: interprets data, surfaces KPIs, flags anomalies
+- [x] Social Media Manager: drafts platform-specific content and update schedules
+- [x] Finance Analyst: models revenue scenarios, tracks burn rate, cash flow
+- [x] Accountant: reconciles transactions, flags discrepancies, prepares summaries
+- [x] Competitive Intelligence: monitors competitors, summarizes positioning changes
+- [x] Product Lead: translates requirements into actionable specs
+- [x] Sales Lead: qualifies pipeline, drafts outreach, tracks conversion
+- [x] Customer Success: handles escalations, drafts responses, logs resolutions
+- [x] All 11 agents: fully written system prompts >200 chars, real handoff conditions, ASSESS LLC attribution
+- [x] Seeded and verified in DB
+
+### Tests & Delivery
+- [x] Phase 5 vitest tests: 36 tests (anti-patterns, model guide, ASSESS swarm) — 137/137 total passing
+- [ ] webdev_save_checkpoint — pending
+- [ ] Push to GitHub — pending
+- [ ] Update prompitect-engineer skill with Phase 5 additions — pending

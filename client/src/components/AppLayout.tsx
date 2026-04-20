@@ -10,6 +10,8 @@ import {
   History,
   Zap,
   Network,
+  AlertTriangle,
+  Cpu,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -28,6 +30,8 @@ const NAV_ITEMS = [
   { href: "/examples", label: "Example Library", icon: GitBranch },
   { href: "/reverse", label: "Reverse Mode", icon: FlipHorizontal },
   { href: "/swarm", label: "Swarm Composer", icon: Network },
+  { href: "/antipatterns", label: "Anti-Patterns", icon: AlertTriangle },
+  { href: "/models", label: "Model Guide", icon: Cpu },
   { href: "/sessions", label: "Sessions", icon: History },
 ];
 
