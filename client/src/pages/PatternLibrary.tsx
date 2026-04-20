@@ -1,10 +1,43 @@
+/**
+ * PatternLibrary.tsx
+ *
+ * Browsable catalog of 22 documented prompt patterns.
+ * Key feature: "Apply to scaffold" — one-click injection of a pattern into
+ * any existing session's scaffold blocks, with LLM-powered rewriting and
+ * a diff-style rationale showing exactly what changed.
+ *
+ * Flow:
+ *   1. User browses / searches patterns
+ *   2. Clicks "Apply to scaffold" on a pattern card
+ *   3. Dialog opens: pick a session (or start new) + confirm
+ *   4. LLM rewrites the affected blocks via scaffold.applyPattern
+ *   5. Changes saved to session; user can navigate to scaffold builder
+ *   6. Rationale shown in a toast with modified block list
+ */
 import { useState, useMemo } from "react";
+import { useLocation } from "wouter";
 import AppLayout from "@/components/AppLayout";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import {
   Search,
   ChevronDown,
@@ -12,7 +45,14 @@ import {
   BookOpen,
   ExternalLink,
   Loader2,
+  Wand2,
+  Zap,
+  CheckCircle2,
+  PlusCircle,
 } from "lucide-react";
+import type { ScaffoldBlock } from "../../../shared/prompitect-types";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Pattern {
   id: number;
@@ -29,6 +69,16 @@ interface Pattern {
   preventsAntiPatterns: string[] | null;
 }
 
+interface SessionSummary {
+  id: number;
+  title: string;
+  targetModel: string;
+  domain: string | null;
+  updatedAt: Date;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const CATEGORY_COLORS: Record<string, string> = {
   "reasoning": "bg-purple-500/10 text-purple-400 border-purple-500/20",
   "few-shot": "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -42,13 +92,295 @@ const CATEGORY_COLORS: Record<string, string> = {
   "negative": "bg-slate-500/10 text-slate-400 border-slate-500/20",
 };
 
-function PatternCard({ pattern }: { pattern: Pattern }) {
+// ─── Apply Pattern Dialog ─────────────────────────────────────────────────────
+
+interface ApplyPatternDialogProps {
+  pattern: Pattern | null;
+  onClose: () => void;
+}
+
+function ApplyPatternDialog({ pattern, onClose }: ApplyPatternDialogProps) {
+  const [, navigate] = useLocation();
+  const [selectedSessionId, setSelectedSessionId] = useState<string>("");
+  const [isApplying, setIsApplying] = useState(false);
+  const [appliedResult, setAppliedResult] = useState<{
+    blocksModified: string[];
+    rationale: string;
+    sessionId: number;
+  } | null>(null);
+
+  const rawSessionsData = trpc.sessions.list.useQuery(
+    { limit: 50 },
+    { enabled: !!pattern }
+  );
+  const sessions = rawSessionsData.data;
+  const sessionsLoading = rawSessionsData.isLoading;
+
+  const applyPatternMutation = trpc.scaffold.applyPattern.useMutation();
+  const createSessionMutation = trpc.sessions.create.useMutation();
+  const updateSessionMutation = trpc.sessions.update.useMutation();
+
+  // Get the selected session's blocks
+  const { data: selectedSession } = trpc.sessions.get.useQuery(
+    { id: parseInt(selectedSessionId) },
+    { enabled: !!selectedSessionId && selectedSessionId !== "new" }
+  );
+
+  async function handleApply() {
+    if (!pattern) return;
+    setIsApplying(true);
+
+    try {
+      let targetSessionId: number;
+      let existingBlocks: ScaffoldBlock[] = [];
+      let targetModel = "gpt-4o";
+
+      if (selectedSessionId === "new" || !selectedSessionId) {
+        // Create a new session with empty blocks
+        const newSession = await createSessionMutation.mutateAsync({
+          title: `${pattern.name} — New Session`,
+          targetModel: "gpt-4o",
+          blocks: [],
+          mode: "discovery",
+        });
+        targetSessionId = newSession.id;
+      } else {
+        targetSessionId = parseInt(selectedSessionId);
+        if (selectedSession?.blocks) {
+          existingBlocks = selectedSession.blocks as unknown as ScaffoldBlock[];
+        }
+        targetModel = selectedSession?.targetModel ?? "gpt-4o";
+      }
+
+      // Apply the pattern via LLM
+      const result = await applyPatternMutation.mutateAsync({
+        patternSlug: pattern.slug,
+        patternName: pattern.name,
+        patternDescription: pattern.description,
+        blocks: existingBlocks,
+        targetModel,
+      });
+
+      // Save the updated blocks back to the session
+      await updateSessionMutation.mutateAsync({
+        id: targetSessionId,
+        blocks: result.blocks as Parameters<typeof updateSessionMutation.mutateAsync>[0]["blocks"],
+      });
+
+      setAppliedResult({
+        blocksModified: result.blocksModified,
+        rationale: result.rationale,
+        sessionId: targetSessionId,
+      });
+    } catch {
+      toast.error("Failed to apply pattern. Please try again.");
+    } finally {
+      setIsApplying(false);
+    }
+  }
+
+  function handleOpenScaffold() {
+    if (appliedResult) {
+      navigate(`/scaffold/${appliedResult.sessionId}`);
+    }
+    onClose();
+  }
+
+  function handleClose() {
+    setAppliedResult(null);
+    setSelectedSessionId("");
+    onClose();
+  }
+
+  return (
+    <Dialog open={!!pattern} onOpenChange={(open) => { if (!open) handleClose(); }}>
+      <DialogContent className="bg-card border-border max-w-lg">
+        {!appliedResult ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-foreground flex items-center gap-2">
+                <Wand2 className="w-4 h-4 text-primary" />
+                Apply Pattern to Scaffold
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground">
+                The <span className="text-foreground font-medium">{pattern?.name}</span> pattern
+                will be applied to the selected session. The LLM will rewrite only the blocks
+                that need to change, preserving your original intent.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              {/* Pattern summary */}
+              <div className="rounded-lg bg-primary/5 border border-primary/20 px-4 py-3 space-y-1">
+                <p className="text-xs font-medium text-primary uppercase tracking-wider">
+                  {pattern?.category}
+                </p>
+                <p className="text-sm text-foreground leading-relaxed">
+                  {pattern?.description.slice(0, 200)}{(pattern?.description.length ?? 0) > 200 ? "…" : ""}
+                </p>
+              </div>
+
+              {/* Session selector */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Target session
+                </label>
+                {sessionsLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Loading sessions…
+                  </div>
+                ) : (
+                  <Select
+                    value={selectedSessionId}
+                    onValueChange={setSelectedSessionId}
+                  >
+                    <SelectTrigger className="bg-background border-border text-sm">
+                      <SelectValue placeholder="Choose a session or create new…" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border">
+                      <SelectItem value="new" className="text-primary">
+                        <span className="flex items-center gap-2">
+                          <PlusCircle className="w-3.5 h-3.5" />
+                          Create new session
+                        </span>
+                      </SelectItem>
+                      {(Array.isArray(sessions) ? sessions : []).map((s: SessionSummary) => (
+                        <SelectItem key={s.id} value={String(s.id)}>
+                          <span className="flex items-center gap-2">
+                            <span className="truncate max-w-[280px]">{s.title}</span>
+                            {s.domain && (
+                              <span className="text-xs text-muted-foreground">
+                                · {s.domain}
+                              </span>
+                            )}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {selectedSessionId && selectedSessionId !== "new" && (
+                  <p className="text-xs text-muted-foreground">
+                    Existing blocks will be preserved where unchanged. Only blocks
+                    affected by this pattern will be rewritten.
+                  </p>
+                )}
+                {selectedSessionId === "new" && (
+                  <p className="text-xs text-muted-foreground">
+                    A new session will be created with blocks generated from scratch
+                    using this pattern as the primary structure.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                className="border-border"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => void handleApply()}
+                disabled={isApplying || !selectedSessionId}
+                className="gap-2"
+              >
+                {isApplying ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Applying…
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-4 h-4" />
+                    Apply Pattern
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          /* Success state */
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-foreground flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-400" />
+                Pattern Applied
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground">
+                The scaffold has been updated with the {pattern?.name} pattern.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              {/* Rationale */}
+              <div className="rounded-lg bg-card border border-border p-4 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  What Changed
+                </p>
+                <p className="text-sm text-foreground leading-relaxed">
+                  {appliedResult.rationale}
+                </p>
+              </div>
+
+              {/* Modified blocks */}
+              {appliedResult.blocksModified.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Blocks Modified
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {appliedResult.blocksModified.map((blockId) => (
+                      <Badge
+                        key={blockId}
+                        variant="outline"
+                        className="text-xs border-primary/30 text-primary bg-primary/5 capitalize"
+                      >
+                        {blockId.replace("_", " ")}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                className="border-border"
+              >
+                Stay Here
+              </Button>
+              <Button onClick={handleOpenScaffold} className="gap-2">
+                <Zap className="w-4 h-4" />
+                Open Scaffold Builder
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Pattern Card ─────────────────────────────────────────────────────────────
+
+interface PatternCardProps {
+  pattern: Pattern;
+  onApply: (pattern: Pattern) => void;
+}
+
+function PatternCard({ pattern, onApply }: PatternCardProps) {
   const [expanded, setExpanded] = useState(false);
   const categoryStyle = CATEGORY_COLORS[pattern.category] ?? "bg-muted text-muted-foreground border-border";
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden transition-all">
-      {/* Header */}
+      {/* Header — clickable to expand */}
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full text-left px-5 py-4 flex items-start gap-3 hover:bg-muted/20 transition-colors"
@@ -64,7 +396,7 @@ function PatternCard({ pattern }: { pattern: Pattern }) {
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            {pattern.description.slice(0, 160)}{pattern.description.length > 160 ? '…' : ''}
+            {pattern.description.slice(0, 160)}{pattern.description.length > 160 ? "…" : ""}
           </p>
           {!expanded && pattern.taskTypes && pattern.taskTypes.length > 0 && (
             <div className="flex gap-1 flex-wrap">
@@ -114,7 +446,7 @@ function PatternCard({ pattern }: { pattern: Pattern }) {
                 When to Avoid
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {pattern.whenNotToUse ?? 'No specific guidance'}
+                {pattern.whenNotToUse ?? "No specific guidance"}
               </p>
             </div>
           </div>
@@ -127,17 +459,21 @@ function PatternCard({ pattern }: { pattern: Pattern }) {
               </p>
               {pattern.examples.slice(0, 1).map((ex, i) => (
                 <div key={i} className="space-y-1">
-                  {ex.title && <p className="text-xs font-medium text-foreground">{ex.title}</p>}
+                  {ex.title && (
+                    <p className="text-xs font-medium text-foreground">{ex.title}</p>
+                  )}
                   <pre className="text-xs text-foreground bg-muted/40 rounded-lg p-3 whitespace-pre-wrap leading-relaxed font-mono overflow-x-auto">
                     {ex.prompt}
                   </pre>
-                  {ex.notes && <p className="text-xs text-muted-foreground">{ex.notes}</p>}
+                  {ex.notes && (
+                    <p className="text-xs text-muted-foreground">{ex.notes}</p>
+                  )}
                 </div>
               ))}
             </div>
           )}
 
-          {/* Compatible models + source */}
+          {/* Footer: models + source + Apply button */}
           <div className="px-5 py-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-1.5 flex-wrap">
               {(pattern.compatibleModels ?? []).map((m: string) => (
@@ -150,18 +486,32 @@ function PatternCard({ pattern }: { pattern: Pattern }) {
                 </Badge>
               ))}
             </div>
-            {pattern.sourceReference && (
-              <a
-                href={pattern.sourceReference}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors flex-shrink-0"
-                onClick={(e) => e.stopPropagation()}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {pattern.sourceReference && (
+                <a
+                  href={pattern.sourceReference}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Source
+                </a>
+              )}
+              {/* ─── Apply to scaffold CTA ─── */}
+              <Button
+                size="sm"
+                className="h-7 px-3 text-xs gap-1.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onApply(pattern);
+                }}
               >
-                <ExternalLink className="w-3 h-3" />
-                Source
-              </a>
-            )}
+                <Wand2 className="w-3 h-3" />
+                Apply to scaffold
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -169,17 +519,19 @@ function PatternCard({ pattern }: { pattern: Pattern }) {
   );
 }
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function PatternLibrary() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [applyingPattern, setApplyingPattern] = useState<Pattern | null>(null);
 
   const { data: patterns, isLoading } = trpc.knowledge.getPatterns.useQuery(undefined);
 
   const categories = useMemo(() => {
     if (!patterns) return [];
     const catSet = new Set((patterns as unknown as Pattern[]).map((p) => p.category));
-    const cats = Array.from(catSet).sort();
-    return cats;
+    return Array.from(catSet).sort();
   }, [patterns]);
 
   const filtered = useMemo(() => {
@@ -189,9 +541,10 @@ export default function PatternLibrary() {
         !search ||
         p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.description.toLowerCase().includes(search.toLowerCase()) ||
-              (p.taskTypes ?? []).some((t: string) => t.toLowerCase().includes(search.toLowerCase()));
-      const matchesCategory =
-        !selectedCategory || p.category === selectedCategory;
+        (p.taskTypes ?? []).some((t: string) =>
+          t.toLowerCase().includes(search.toLowerCase())
+        );
+      const matchesCategory = !selectedCategory || p.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
   }, [patterns, search, selectedCategory]);
@@ -217,7 +570,10 @@ export default function PatternLibrary() {
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              Documented prompting techniques grounded in published research. Each pattern includes when-to-use guidance, examples, and model compatibility notes.
+              Documented prompting techniques grounded in published research. Expand any pattern
+              to see when-to-use guidance, examples, and model compatibility — then click{" "}
+              <span className="text-foreground font-medium">Apply to scaffold</span> to inject
+              it into any session with one click.
             </p>
           </div>
 
@@ -249,9 +605,7 @@ export default function PatternLibrary() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      setSelectedCategory(
-                        selectedCategory === cat ? null : cat
-                      )
+                      setSelectedCategory(selectedCategory === cat ? null : cat)
                     }
                     className={cn(
                       "h-9 text-xs border capitalize",
@@ -292,12 +646,22 @@ export default function PatternLibrary() {
           ) : (
             <div className="space-y-3">
               {(filtered as unknown as Pattern[]).map((pattern) => (
-                <PatternCard key={pattern.id} pattern={pattern} />
+                <PatternCard
+                  key={pattern.id}
+                  pattern={pattern}
+                  onApply={setApplyingPattern}
+                />
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {/* Apply pattern dialog */}
+      <ApplyPatternDialog
+        pattern={applyingPattern}
+        onClose={() => setApplyingPattern(null)}
+      />
     </AppLayout>
   );
 }

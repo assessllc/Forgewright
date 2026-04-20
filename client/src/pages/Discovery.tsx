@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
+import { useStream } from "@/hooks/useStream";
 import {
   Send,
   ArrowRight,
@@ -33,147 +34,216 @@ const SPEC_FIELDS = [
   { key: "context", label: "Context" },
 ] as const;
 
+/** Strip hidden spec annotation from display text */
+function stripSpecAnnotation(text: string): string {
+  return text.replace(/<!--spec:[\s\S]*?-->/g, "").trim();
+}
+
+/**
+ * Infer spec updates from the conversation heuristically.
+ * Provides progressive spec filling even without explicit LLM annotations.
+ */
+function inferSpecFromConversation(
+  msgs: DiscoveryMessage[],
+  currentSpec: DiscoverySpec
+): DiscoverySpec {
+  const userText = msgs
+    .filter((m) => m.role === "user")
+    .map((m) => m.content.toLowerCase())
+    .join(" ");
+
+  const updated = { ...currentSpec };
+
+  if (!updated.domain) {
+    if (/\b(code|function|class|bug|refactor|typescript|python|javascript|api|database|sql)\b/.test(userText))
+      updated.domain = "code";
+    else if (/\b(email|report|article|blog|essay|write|draft|copy)\b/.test(userText))
+      updated.domain = "writing";
+    else if (/\b(data|analysis|chart|visuali|pandas|excel|csv|insight)\b/.test(userText))
+      updated.domain = "data-analysis";
+    else if (/\b(legal|contract|clause|compliance|jurisdiction|law)\b/.test(userText))
+      updated.domain = "legal";
+    else if (/\b(medical|clinical|patient|diagnosis|health|symptom)\b/.test(userText))
+      updated.domain = "medical";
+    else if (/\b(translate|translation|spanish|french|german|language)\b/.test(userText))
+      updated.domain = "translation";
+    else if (/\b(market|campaign|brand|seo|social|ad|copy|audience)\b/.test(userText))
+      updated.domain = "marketing";
+    else if (/\b(research|paper|literature|citation|academic|study)\b/.test(userText))
+      updated.domain = "research";
+  }
+
+  const filledFields = [
+    updated.domain, updated.role, updated.task,
+    updated.audience, updated.format, updated.context,
+  ].filter(Boolean).length;
+  const msgCount = msgs.filter((m) => m.role === "user").length;
+  updated.completionScore = Math.min(
+    95,
+    Math.round((filledFields / 6) * 60 + Math.min(msgCount * 5, 35))
+  );
+
+  return updated;
+}
+
 export default function Discovery() {
   const [, navigate] = useLocation();
   const [messages, setMessages] = useState<DiscoveryMessage[]>([INITIAL_MESSAGE]);
+  const [streamingContent, setStreamingContent] = useState("");
   const [input, setInput] = useState("");
   const [spec, setSpec] = useState<DiscoverySpec>({ completionScore: 0 });
-  const [isThinking, setIsThinking] = useState(false);
+  const [isBuildingScaffold, setIsBuildingScaffold] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const specRef = useRef(spec);
+  specRef.current = spec;
 
-  const chatMutation = trpc.analysis.discoveryChat.useMutation();
   const scaffoldMutation = trpc.scaffold.generateFromDescription.useMutation();
   const createSession = trpc.sessions.create.useMutation();
 
+  const { stream, isStreaming } = useStream("/api/stream/discovery", {
+    onToken: (_token, accumulated) => {
+      setStreamingContent(accumulated);
+    },
+    onDone: (fullText) => {
+      const cleanText = stripSpecAnnotation(fullText);
+      const assistantMsg: DiscoveryMessage = {
+        role: "assistant",
+        content: cleanText,
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => {
+        const updated = [...prev, assistantMsg];
+        setSpec(inferSpecFromConversation(updated, specRef.current));
+        return updated;
+      });
+      setStreamingContent("");
+    },
+    onError: () => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Sorry, I encountered an error. Please try again.",
+          timestamp: Date.now(),
+        },
+      ]);
+      setStreamingContent("");
+    },
+  });
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, streamingContent]);
 
-  async function sendMessage() {
-    if (!input.trim() || isThinking) return;
+  const sendMessage = useCallback(async () => {
+    if (!input.trim() || isStreaming || isBuildingScaffold) return;
+
     const userMsg: DiscoveryMessage = {
       role: "user",
       content: input.trim(),
       timestamp: Date.now(),
     };
-    setMessages((prev) => [...prev, userMsg]);
+
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setInput("");
-    setIsThinking(true);
+
+    const streamMessages = updatedMessages.map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    }));
 
     try {
-      const allMessages = [...messages, userMsg].map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-      const result = await chatMutation.mutateAsync({
-        messages: allMessages,
-        currentSpec: spec as unknown as Record<string, unknown>,
+      await stream({
+        messages: streamMessages,
+        currentSpec: specRef.current as unknown as Record<string, unknown>,
       });
-      const assistantMsg: DiscoveryMessage = {
-        role: "assistant",
-        content: result.message,
-        timestamp: Date.now(),
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
-      setSpec(result.updatedSpec);
     } catch {
-      const errMsg: DiscoveryMessage = {
-        role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
-        timestamp: Date.now(),
-      };
-      setMessages((prev) => [...prev, errMsg]);
-    } finally {
-      setIsThinking(false);
+      // onError callback handles UI state
     }
-  }
+  }, [input, isStreaming, isBuildingScaffold, messages, stream]);
 
   async function skipToScaffold() {
-    setIsThinking(true);
+    setIsBuildingScaffold(true);
     try {
-      // Build a description from whatever we have so far
       const conversationText = messages
         .filter((m) => m.role === "user")
         .map((m) => m.content)
         .join(" ");
-      const description =
-        conversationText ||
-        "General purpose assistant for the described task";
+      const description = conversationText || "General purpose assistant";
 
       const result = await scaffoldMutation.mutateAsync({
         description,
-        domain: spec.domain,
+        domain: specRef.current.domain,
       });
-
       const sessionResult = await createSession.mutateAsync({
         title: result.title,
         targetModel: "gpt-4o",
         blocks: result.blocks as Parameters<typeof createSession.mutateAsync>[0]["blocks"],
         mode: "discovery",
         domain: result.domain,
-        discoveryData: JSON.stringify(spec),
+        discoveryData: JSON.stringify(specRef.current),
       });
-
       navigate(`/scaffold/${sessionResult.id}`);
     } catch {
-      setIsThinking(false);
+      setIsBuildingScaffold(false);
     }
   }
 
   async function buildScaffold() {
-    setIsThinking(true);
+    setIsBuildingScaffold(true);
     try {
+      const s = specRef.current;
       const description = [
-        spec.role && `Role: ${spec.role}`,
-        spec.task && `Task: ${spec.task}`,
-        spec.context && `Context: ${spec.context}`,
-        spec.audience && `Audience: ${spec.audience}`,
-        spec.format && `Format: ${spec.format}`,
-        spec.constraints?.length && `Constraints: ${spec.constraints.join(", ")}`,
-      ]
-        .filter(Boolean)
-        .join("\n");
+        s.role && `Role: ${s.role}`,
+        s.task && `Task: ${s.task}`,
+        s.context && `Context: ${s.context}`,
+        s.audience && `Audience: ${s.audience}`,
+        s.format && `Format: ${s.format}`,
+        s.constraints?.length && `Constraints: ${s.constraints.join(", ")}`,
+      ].filter(Boolean).join("\n") || "General assistant";
 
       const result = await scaffoldMutation.mutateAsync({
-        description: description || "General assistant",
-        targetModel: spec.targetModel ?? "gpt-4o",
-        domain: spec.domain,
+        description,
+        targetModel: s.targetModel ?? "gpt-4o",
+        domain: s.domain,
       });
-
       const sessionResult = await createSession.mutateAsync({
         title: result.title,
-        targetModel: spec.targetModel ?? "gpt-4o",
+        targetModel: s.targetModel ?? "gpt-4o",
         blocks: result.blocks as Parameters<typeof createSession.mutateAsync>[0]["blocks"],
         mode: "discovery",
         domain: result.domain,
-        discoveryData: JSON.stringify(spec),
+        discoveryData: JSON.stringify(s),
       });
-
       navigate(`/scaffold/${sessionResult.id}`);
     } catch {
-      setIsThinking(false);
+      setIsBuildingScaffold(false);
     }
   }
 
   const completionScore = spec.completionScore ?? 0;
+  const isBusy = isStreaming || isBuildingScaffold;
 
   return (
-    <AppLayout title="Discovery" actions={
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={skipToScaffold}
-        disabled={isThinking}
-        className="text-muted-foreground hover:text-foreground text-xs gap-1.5"
-      >
-        Skip to scaffold
-        <ArrowRight className="w-3.5 h-3.5" />
-      </Button>
-    }>
+    <AppLayout
+      title="Discovery"
+      actions={
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={skipToScaffold}
+          disabled={isBusy}
+          className="text-muted-foreground hover:text-foreground text-xs gap-1.5"
+        >
+          Skip to scaffold
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Button>
+      }
+    >
       <div className="h-full flex overflow-hidden" style={{ height: "calc(100vh - 3.5rem)" }}>
         {/* Left: Chat panel */}
         <div className="flex-1 flex flex-col min-w-0 border-r border-border">
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((msg, i) => (
               <div
@@ -183,7 +253,6 @@ export default function Discovery() {
                   msg.role === "user" ? "ml-auto flex-row-reverse" : ""
                 )}
               >
-                {/* Avatar */}
                 <div
                   className={cn(
                     "w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-medium",
@@ -192,13 +261,8 @@ export default function Discovery() {
                       : "bg-secondary text-secondary-foreground"
                   )}
                 >
-                  {msg.role === "assistant" ? (
-                    <Zap className="w-3.5 h-3.5" />
-                  ) : (
-                    "U"
-                  )}
+                  {msg.role === "assistant" ? <Zap className="w-3.5 h-3.5" /> : "U"}
                 </div>
-                {/* Bubble */}
                 <div
                   className={cn(
                     "rounded-xl px-4 py-3 text-sm leading-relaxed max-w-lg",
@@ -211,17 +275,29 @@ export default function Discovery() {
                 </div>
               </div>
             ))}
-            {isThinking && (
-              <div className="flex gap-3">
+
+            {/* Live streaming bubble */}
+            {isStreaming && (
+              <div className="flex gap-3 max-w-2xl">
                 <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                   <Zap className="w-3.5 h-3.5 text-primary" />
                 </div>
-                <div className="bg-card border border-border rounded-xl px-4 py-3 flex items-center gap-2">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Thinking…</span>
+                <div className="rounded-xl px-4 py-3 text-sm leading-relaxed bg-card border border-primary/30 text-foreground max-w-lg">
+                  {streamingContent ? (
+                    <>
+                      {stripSpecAnnotation(streamingContent)}
+                      <span className="inline-block w-1.5 h-3.5 bg-primary/70 ml-0.5 animate-pulse rounded-sm align-text-bottom" />
+                    </>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Thinking…
+                    </span>
+                  )}
                 </div>
               </div>
             )}
+
             <div ref={messagesEndRef} />
           </div>
 
@@ -236,17 +312,21 @@ export default function Discovery() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    sendMessage();
+                    void sendMessage();
                   }
                 }}
               />
               <Button
-                onClick={sendMessage}
-                disabled={!input.trim() || isThinking}
+                onClick={() => void sendMessage()}
+                disabled={!input.trim() || isBusy}
                 size="icon"
                 className="self-end flex-shrink-0"
               >
-                <Send className="w-4 h-4" />
+                {isStreaming ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-1.5">
@@ -266,10 +346,7 @@ export default function Discovery() {
                 {completionScore}%
               </span>
             </div>
-            <Progress
-              value={completionScore}
-              className="h-1.5 bg-muted"
-            />
+            <Progress value={completionScore} className="h-1.5 bg-muted" />
             <p className="text-xs text-muted-foreground mt-1.5">
               {completionScore < 40
                 ? "Just getting started…"
@@ -293,9 +370,7 @@ export default function Discovery() {
                     ) : (
                       <Circle className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                     )}
-                    <span className="text-xs font-medium text-sidebar-foreground">
-                      {label}
-                    </span>
+                    <span className="text-xs font-medium text-sidebar-foreground">{label}</span>
                   </div>
                   {hasValue && (
                     <p className="text-xs text-muted-foreground pl-4.5 leading-relaxed line-clamp-3">
@@ -314,17 +389,11 @@ export default function Discovery() {
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3 h-3 text-primary flex-shrink-0" />
-                  <span className="text-xs font-medium text-sidebar-foreground">
-                    Constraints
-                  </span>
+                  <span className="text-xs font-medium text-sidebar-foreground">Constraints</span>
                 </div>
                 <div className="pl-4.5 flex flex-wrap gap-1">
                   {spec.constraints.map((c, i) => (
-                    <Badge
-                      key={i}
-                      variant="outline"
-                      className="text-xs border-border text-muted-foreground"
-                    >
+                    <Badge key={i} variant="outline" className="text-xs border-border text-muted-foreground">
                       {c}
                     </Badge>
                   ))}
@@ -333,14 +402,13 @@ export default function Discovery() {
             )}
           </div>
 
-          {/* Build scaffold CTA */}
           <div className="p-4 border-t border-sidebar-border">
             <Button
               onClick={buildScaffold}
-              disabled={isThinking || completionScore < 30}
+              disabled={isBusy || completionScore < 30}
               className="w-full gap-2 text-sm"
             >
-              {isThinking ? (
+              {isBuildingScaffold ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <Zap className="w-4 h-4" />

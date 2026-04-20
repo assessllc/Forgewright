@@ -24,6 +24,7 @@ const NAV_ITEMS = [
   { href: "/discovery", label: "Discovery", icon: MessageSquare },
   { href: "/scaffold", label: "Scaffold Builder", icon: Layers },
   { href: "/patterns", label: "Pattern Library", icon: BookOpen },
+  { href: "/examples", label: "Example Library", icon: GitBranch },
   { href: "/reverse", label: "Reverse Mode", icon: FlipHorizontal },
   { href: "/sessions", label: "Sessions", icon: History },
 ];

@@ -7,6 +7,7 @@ import {
   modelQuirks,
   domainScripts,
   quickStartTemplates,
+  examplePrompts,
 } from "../../drizzle/schema";
 import { eq, asc } from "drizzle-orm";
 
@@ -182,6 +183,69 @@ export const knowledgeRouter = router({
       return {
         ...rows[0],
         scaffoldBlocks: safeJson<unknown[]>(rows[0].scaffoldBlocks),
+      };
+    }),
+
+  // ── Example Prompt Library ────────────────────────────────────────────────
+  getExamples: publicProcedure
+    .input(
+      z
+        .object({
+          domain: z.string().optional(),
+          patternSlug: z.string().optional(),
+          difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
+          featured: z.boolean().optional(),
+          search: z.string().optional(),
+          limit: z.number().min(1).max(200).optional(),
+        })
+        .optional()
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db
+        .select()
+        .from(examplePrompts)
+        .orderBy(asc(examplePrompts.id));
+      let results = rows.map((r) => ({
+        ...r,
+        testedModels: safeJson<string[]>(r.testedModels),
+        secondaryPatterns: safeJson<string[]>(r.secondaryPatterns),
+        isFeatured: Boolean(r.isFeatured),
+      }));
+      if (input?.domain) results = results.filter((r) => r.domain === input.domain);
+      if (input?.patternSlug) results = results.filter((r) => r.patternSlug === input.patternSlug);
+      if (input?.difficulty) results = results.filter((r) => r.difficulty === input.difficulty);
+      if (input?.featured) results = results.filter((r) => r.isFeatured);
+      if (input?.search) {
+        const q = input.search.toLowerCase();
+        results = results.filter(
+          (r) =>
+            r.title.toLowerCase().includes(q) ||
+            r.domain.toLowerCase().includes(q) ||
+            (r.promptText && r.promptText.toLowerCase().includes(q))
+        );
+      }
+      if (input?.limit) results = results.slice(0, input.limit);
+      return results;
+    }),
+
+  getExample: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return null;
+      const rows = await db
+        .select()
+        .from(examplePrompts)
+        .where(eq(examplePrompts.slug, input.slug))
+        .limit(1);
+      if (!rows[0]) return null;
+      return {
+        ...rows[0],
+        testedModels: safeJson<string[]>(rows[0].testedModels),
+        secondaryPatterns: safeJson<string[]>(rows[0].secondaryPatterns),
+        isFeatured: Boolean(rows[0].isFeatured),
       };
     }),
 });

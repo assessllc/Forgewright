@@ -278,4 +278,119 @@ Important: Write the actual prompt content, not descriptions of what the prompt 
         }>;
       };
     }),
+
+  /**
+   * Apply a named prompt pattern to an existing scaffold.
+   * The LLM rewrites the affected blocks to incorporate the pattern while
+   * preserving the user's original intent. Returns the updated blocks plus
+   * a human-readable rationale explaining what changed and why.
+   *
+   * Grounded in: Anthropic prompting guide, Wei et al. CoT paper, ReAct paper,
+   * Constitutional AI (Bai et al.), and OpenAI prompt engineering guide.
+   */
+  applyPattern: publicProcedure
+    .input(
+      z.object({
+        patternSlug: z.string(),
+        patternName: z.string(),
+        patternDescription: z.string(),
+        blocks: z.array(ScaffoldBlockSchema),
+        targetModel: z.string().default("gpt-4o"),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const enabledBlocks = input.blocks.filter((b) => b.enabled && b.content);
+      const scaffoldText = enabledBlocks
+        .map((b) => `## ${b.label}\n${b.content}`)
+        .join("\n\n");
+
+      const systemPrompt = `You are a prompt engineering expert. Apply the specified prompting pattern to the existing scaffold.
+
+Pattern to apply: ${input.patternName}
+Pattern description: ${input.patternDescription}
+
+Rules:
+1. Rewrite ONLY the blocks that need to change to incorporate the pattern
+2. Preserve the user's original intent and domain context exactly
+3. Keep unchanged blocks identical to the input — copy them verbatim
+4. For Chain-of-Thought pattern: if target model is o1 or o3, do not modify the reasoning block
+5. Be specific and actionable — write real prompt content, not meta-descriptions
+6. Return a concise rationale (2-3 sentences) explaining what you changed and why
+7. blocksModified must list only the block ids you actually changed
+
+Target model: ${input.targetModel}
+
+Return JSON with this exact structure:
+{
+  "blocks": [
+    { "id": "role", "label": "Role", "content": "...", "enabled": true, "source": "user" },
+    { "id": "context", "label": "Context", "content": "...", "enabled": true, "source": "user" },
+    { "id": "task", "label": "Task", "content": "...", "enabled": true, "source": "user" },
+    { "id": "constraints", "label": "Constraints", "content": "...", "enabled": true, "source": "user" },
+    { "id": "examples", "label": "Examples", "content": "...", "enabled": false, "source": "user" },
+    { "id": "format", "label": "Format", "content": "...", "enabled": true, "source": "user" },
+    { "id": "reasoning", "label": "Reasoning", "content": "...", "enabled": true, "source": "user" },
+    { "id": "output_validation", "label": "Output Validation", "content": "...", "enabled": true, "source": "user" }
+  ],
+  "rationale": "What changed and why, in 2-3 sentences.",
+  "blocksModified": ["role", "task"]
+}`;
+
+      const response = await invokeLLM({
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content: `Apply the ${input.patternName} pattern to this scaffold:\n\n${scaffoldText || "(empty scaffold — generate appropriate starter content for this pattern)"}`,
+          },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "apply_pattern_result",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                blocks: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: { type: "string" },
+                      label: { type: "string" },
+                      content: { type: "string" },
+                      enabled: { type: "boolean" },
+                      source: { type: "string" },
+                    },
+                    required: ["id", "label", "content", "enabled", "source"],
+                    additionalProperties: false,
+                  },
+                },
+                rationale: { type: "string" },
+                blocksModified: { type: "array", items: { type: "string" } },
+              },
+              required: ["blocks", "rationale", "blocksModified"],
+              additionalProperties: false,
+            },
+          },
+        },
+      });
+
+      const rawContent4 = response.choices[0]?.message?.content;
+      const content4 = typeof rawContent4 === "string" ? rawContent4 : null;
+      if (!content4) throw new Error("No response from LLM");
+
+      return JSON.parse(content4) as {
+        blocks: Array<{
+          id: string;
+          label: string;
+          content: string;
+          enabled: boolean;
+          source: string;
+        }>;
+        rationale: string;
+        blocksModified: string[];
+      };
+    }),
 });

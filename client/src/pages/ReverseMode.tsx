@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
+import { useStream } from "@/hooks/useStream";
 import {
   Loader2,
   Zap,
@@ -65,25 +66,84 @@ export default function ReverseMode() {
   const [, navigate] = useLocation();
   const [inputText, setInputText] = useState("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
+  const inputTextRef = useRef("");
+  inputTextRef.current = inputText;
 
-  const analyzeMutation = trpc.analysis.reverseAnalyze.useMutation();
   const createSession = trpc.sessions.create.useMutation();
 
+  const { stream, isStreaming } = useStream("/api/stream/reverse", {
+    onToken: (_token, accumulated) => {
+      setStreamingText(accumulated);
+    },
+    onDone: (fullText) => {
+      setStreamingText("");
+      try {
+        // The reverse stream endpoint returns a JSON object
+        const parsed = JSON.parse(fullText) as {
+          tone: string;
+          structure: string;
+          impliedRole: string;
+          impliedAudience: string;
+          domain: string;
+          taskType: string;
+          keyPatterns: string[];
+          suggestedBlocks: Record<string, string>;
+        };
+
+        const blocks: ScaffoldBlock[] = [
+          { id: "role", label: "Role", content: parsed.suggestedBlocks.role ?? "", enabled: !!(parsed.suggestedBlocks.role), source: "reverse" },
+          { id: "context", label: "Context", content: parsed.suggestedBlocks.context ?? "", enabled: !!(parsed.suggestedBlocks.context), source: "reverse" },
+          { id: "task", label: "Task", content: parsed.suggestedBlocks.task ?? "", enabled: !!(parsed.suggestedBlocks.task), source: "reverse" },
+          { id: "constraints", label: "Constraints", content: parsed.suggestedBlocks.constraints ?? "", enabled: !!(parsed.suggestedBlocks.constraints), source: "reverse" },
+          { id: "examples", label: "Examples", content: "", enabled: false, source: "reverse" },
+          { id: "format", label: "Format", content: parsed.suggestedBlocks.format ?? "", enabled: !!(parsed.suggestedBlocks.format), source: "reverse" },
+          { id: "reasoning", label: "Reasoning", content: parsed.suggestedBlocks.reasoning ?? "", enabled: !!(parsed.suggestedBlocks.reasoning), source: "reverse" },
+          { id: "output_validation", label: "Output Validation", content: parsed.suggestedBlocks.output_validation ?? "", enabled: !!(parsed.suggestedBlocks.output_validation), source: "reverse" },
+        ];
+
+        const enabledCount = blocks.filter((b) => b.enabled).length;
+        const confidence = enabledCount >= 5 ? "high" : enabledCount >= 3 ? "medium" : "low";
+
+        setResult({
+          analysis: {
+            tone: parsed.tone,
+            structure: parsed.structure,
+            impliedRole: parsed.impliedRole,
+            impliedAudience: parsed.impliedAudience,
+            domain: parsed.domain,
+            taskType: parsed.taskType,
+            keyPatterns: parsed.keyPatterns,
+          },
+          blocks,
+          title: `Reverse: ${parsed.taskType} (${parsed.domain})`,
+          confidence,
+          confidenceNote:
+            confidence === "high"
+              ? "Strong signal — most scaffold blocks reconstructed with high confidence."
+              : confidence === "medium"
+              ? "Moderate signal — some blocks inferred from context."
+              : "Weak signal — limited information to reconstruct the prompt.",
+        });
+      } catch {
+        toast.error("Failed to parse analysis result. The model may have returned unexpected output.");
+      }
+    },
+    onError: () => {
+      toast.error("Analysis failed. Please try again.");
+      setStreamingText("");
+    },
+  });
+
+  const isAnalyzing = isStreaming;
+
   async function handleAnalyze() {
-    if (!inputText.trim() || isAnalyzing) return;
-    setIsAnalyzing(true);
+    if (!inputTextRef.current.trim() || isStreaming) return;
     setResult(null);
     try {
-      const res = await analyzeMutation.mutateAsync({
-        exampleOutput: inputText.trim(),
-        targetModel: "gpt-4o",
-      });
-      setResult(res as AnalysisResult);
+      await stream({ text: inputTextRef.current.trim() });
     } catch {
-      toast.error("Analysis failed. Please try again.");
-    } finally {
-      setIsAnalyzing(false);
+      // onError callback handles UI state
     }
   }
 
@@ -149,7 +209,7 @@ export default function ReverseMode() {
                   {inputText.length} characters · ~{Math.ceil(inputText.length / 4)} tokens
                 </span>
                 <Button
-                  onClick={handleAnalyze}
+                  onClick={() => void handleAnalyze()}
                   disabled={!inputText.trim() || isAnalyzing}
                   className="gap-2"
                 >
@@ -161,6 +221,20 @@ export default function ReverseMode() {
                   {isAnalyzing ? "Analyzing…" : "Analyze Output"}
                 </Button>
               </div>
+
+              {/* Streaming progress */}
+              {isStreaming && streamingText && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                    <span className="text-xs font-medium text-primary">Analyzing output…</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground font-mono leading-relaxed max-h-24 overflow-hidden">
+                    {streamingText.slice(0, 300)}
+                    {streamingText.length > 300 && "…"}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -255,7 +329,7 @@ export default function ReverseMode() {
 
               {/* Actions */}
               <div className="flex items-center gap-3">
-                <Button onClick={handleBuildScaffold} className="gap-2">
+                <Button onClick={() => void handleBuildScaffold()} className="gap-2">
                   <ArrowRight className="w-4 h-4" />
                   Open in Scaffold Builder
                 </Button>

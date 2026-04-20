@@ -104,3 +104,43 @@
 - [x] Vitest: knowledge router shape tests
 - [x] Vitest: sessions router shape tests
 - [x] All 25 tests passing
+
+## Phase 2 — Current Sprint
+
+### Task 1: SSE Streaming for LLM calls
+- [ ] Add SSE endpoint in Express server for streaming LLM responses
+- [ ] Stream Discovery chat responses token-by-token
+- [ ] Stream Reverse Mode analysis token-by-token
+- [ ] Frontend: EventSource client hook for consuming SSE streams
+- [ ] Frontend: Animated typing indicator replaced by live token stream
+- [ ] Graceful fallback if streaming fails
+
+### Task 2: Pattern Library — Apply to Scaffold
+- [ ] "Apply Pattern" button on each pattern card in Pattern Library
+- [ ] Pattern application modal: preview what blocks will be injected/modified
+- [ ] Inject pattern's example blocks into the scaffold builder state
+- [ ] Navigate to scaffold builder with pattern pre-applied
+- [ ] Visual indicator on blocks showing which pattern they came from
+- [ ] Handle conflict: warn if existing block content will be overwritten
+
+### Task 3: 100+ Real Example Prompt Library
+- [ ] Schema: example_prompts table (already exists) — verify fields
+- [ ] Seed 100+ real, domain-diverse prompts with full metadata
+  - [ ] Code domain: 15+ examples (review, debug, refactor, test, document, architect)
+  - [ ] Writing domain: 15+ examples (email, report, blog, creative, technical, legal)
+  - [ ] Data analysis domain: 12+ examples (SQL, pandas, visualization, insight extraction)
+  - [ ] Research domain: 10+ examples (literature review, synthesis, fact-check, summarize)
+  - [ ] Marketing domain: 10+ examples (copy, SEO, social, campaign brief, persona)
+  - [ ] Education domain: 8+ examples (lesson plan, quiz, explanation, feedback)
+  - [ ] Medical/Health domain: 8+ examples (patient education, clinical summary, triage)
+  - [ ] Legal domain: 8+ examples (contract review, brief, compliance check, plain-language)
+  - [ ] Translation domain: 6+ examples (technical, literary, localization, register-aware)
+  - [ ] Product/UX domain: 8+ examples (PRD, user story, spec, critique, persona)
+- [ ] Each example includes: title, domain, pattern_used, target_model_family, quality_notes, full_prompt_text, expected_output_description, tags
+- [ ] Example Library browser page: search, filter by domain/pattern/model, preview full prompt
+- [ ] Link examples to patterns in the Pattern Library
+
+### GitHub & Skill
+- [ ] Create new private GitHub repository: prompitect
+- [ ] Push full codebase to repository
+- [ ] Create prompitect-engineer skill with full workflow documentation

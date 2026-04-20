@@ -179,3 +179,40 @@ export const quickStartTemplates = mysqlTable("quick_start_templates", {
 
 export type QuickStartTemplate = typeof quickStartTemplates.$inferSelect;
 export type InsertQuickStartTemplate = typeof quickStartTemplates.$inferInsert;
+
+// ─── Example Prompt Library ───────────────────────────────────────────────────
+// 100+ real, tested, domain-diverse example prompts.
+// Each row is a complete, standalone prompt with full metadata.
+export const examplePrompts = mysqlTable("example_prompts", {
+  id: int("id").autoincrement().primaryKey(),
+  // Short human-readable identifier, e.g. "cot-math-grade-school"
+  slug: varchar("slug", { length: 128 }).notNull().unique(),
+  title: varchar("title", { length: 255 }).notNull(),
+  // Domain: software-engineering, creative-writing, data-analysis, legal,
+  // medical, marketing, education, research, customer-support, etc.
+  domain: varchar("domain", { length: 64 }).notNull(),
+  // Task type: explain, generate, analyze, summarize, classify, translate,
+  // extract, rewrite, debug, plan, evaluate, roleplay, etc.
+  taskType: varchar("taskType", { length: 64 }).notNull(),
+  // Primary pattern demonstrated (matches prompt_patterns.slug)
+  patternSlug: varchar("patternSlug", { length: 64 }),
+  // The full prompt text — ready to copy and use
+  promptText: text("promptText").notNull(),
+  // Optional: the expected or example output
+  exampleOutput: text("exampleOutput"),
+  // JSON: string[] — patterns demonstrated beyond the primary
+  secondaryPatterns: json("secondaryPatterns"),
+  // JSON: string[] — model families this was tested/optimized for
+  testedModels: json("testedModels"),
+  // Difficulty: beginner, intermediate, advanced
+  difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate"),
+  // Approximate token count of the prompt itself
+  tokenCount: int("tokenCount"),
+  // Source or attribution note
+  sourceNote: text("sourceNote"),
+  // Whether this is a featured/highlighted example
+  isFeatured: boolean("isFeatured").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ExamplePrompt = typeof examplePrompts.$inferSelect;
+export type InsertExamplePrompt = typeof examplePrompts.$inferInsert;
