@@ -89,6 +89,13 @@ export default function AppLayout({ children, title, actions }: AppLayoutProps) 
           })}
         </nav>
 
+        {/* ASSESS LLC branding */}
+        <div className="hidden lg:flex items-center justify-center px-3 py-2">
+          <span className="text-[10px] text-muted-foreground/50 tracking-wide font-medium">
+            by ASSESS LLC
+          </span>
+        </div>
+
         {/* User */}
         <div className="p-2 border-t border-sidebar-border">
           {isAuthenticated ? (

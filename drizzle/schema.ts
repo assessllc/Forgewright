@@ -243,3 +243,26 @@ export const swarmTemplates = mysqlTable("swarm_templates", {
 
 export type SwarmTemplate = typeof swarmTemplates.$inferSelect;
 export type InsertSwarmTemplate = typeof swarmTemplates.$inferInsert;
+
+// ─── Custom Swarms ───────────────────────────────────────────────────────────────────────────────
+// User-built swarm configurations. Each row is a named swarm with a topology
+// and a set of agent definitions. Agents can be typed manually or seeded from
+// the example_prompts library.
+export const customSwarms = mysqlTable("custom_swarms", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 256 }).notNull(),
+  description: text("description"),
+  goal: text("goal"),
+  topology: mysqlEnum("topology", ["sequential", "parallel", "hub-spoke", "hierarchical", "iterative"]).notNull().default("sequential"),
+  // JSON: CustomSwarmAgent[] — { id, name, role, systemPrompt, inputFrom, outputTo, handoffCondition, sourceExampleSlug? }
+  agents: json("agents").notNull(),
+  agentCount: int("agentCount").notNull().default(0),
+  // JSON: string[] — compatible platforms user targets
+  compatiblePlatforms: json("compatiblePlatforms"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CustomSwarm = typeof customSwarms.$inferSelect;
+export type InsertCustomSwarm = typeof customSwarms.$inferInsert;

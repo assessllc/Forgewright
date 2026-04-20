@@ -1214,7 +1214,7 @@ OUTPUT FORMAT:
         name: "Marketing Team Lead",
         role: "Coordinate the marketing review: pipeline, campaigns, and brand metrics",
         inputFrom: "orchestrator",
-        outputTo: "finance_lead",
+        outputTo: "orchestrator",
         handoffCondition: "When marketing review is complete, return to Orchestrator.",
         systemPrompt: `You are the Marketing Team Lead. You review marketing performance for the period.
 

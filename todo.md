@@ -181,3 +181,40 @@
 ### Tests
 - [x] Vitest tests: rename verification, SwarmAgent type structure, swarm templates DB integrity, provenance badge logic, export document format
 - [x] 77/77 tests passing
+
+## Phase 4 — Completed
+
+### Swarm Composer Audit & Fixes
+- [x] Fix marketing_lead outputTo bug (was routing to finance_lead, now routes to orchestrator)
+- [x] All 8 templates confirmed: fully written system prompts, no truncation in DB
+
+### ASSESS LLC Branding
+- [x] "by ASSESS LLC" added to app sidebar footer
+- [x] "by ASSESS LLC" added to the home page hero
+- [x] "by ASSESS LLC" added to README
+- [x] "Promptwright — by ASSESS LLC" in all swarm export documents
+
+### GitHub Repository Rename
+- [x] GitHub repository renamed from prompitect to Promptwright
+- [x] Git remote URL updated to Howie8erHole/Promptwright
+- [x] README clone URL updated
+
+### Custom Swarm Builder (Example-Picker)
+- [x] Top-level mode switcher: Templates | Build Your Own | My Swarms
+- [x] User defines swarm name and goal
+- [x] Topology selector: sequential, parallel, hub-spoke, hierarchical, iterative (with descriptions)
+- [x] User adds agents: each with name, role, system prompt, inputFrom, outputTo, handoffCondition
+- [x] System prompt can be typed manually OR picked from Example Library
+- [x] Example picker modal: browse 108 examples with search + domain filter
+- [x] Source provenance badge on agent card when prompt came from example library
+- [x] Add/remove agents, collapse/expand individual agent cards
+- [x] Export custom swarm as .md briefing with ASSESS LLC attribution
+- [x] Copy all agent prompts to clipboard
+- [x] custom_swarms DB table: schema + migration applied
+- [x] swarmsRouter: list, get, create, update, delete (all protectedProcedure)
+- [x] My Swarms tab: list saved swarms, load into builder, delete
+- [x] Token count display per agent system prompt
+
+### Tests
+- [x] Phase 4 vitest tests: 22 tests covering swarms router, agent structure, export format, ASSESS LLC branding, seed data correctness, SwarmBuilder component
+- [x] 99/99 tests passing

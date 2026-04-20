@@ -2,6 +2,8 @@
 
 > *A wright is a skilled maker of complex, structured things — a playwright, a wheelwright, a shipwright. Promptwright applies that same craft to the design of language model prompts.*
 
+*by [ASSESS LLC](https://assessllc.com)*
+
 **Promptwright** is a structured workbench for crafting, analyzing, and refining prompts for large language models. It is built on real prompt engineering research — not marketing copy — and designed for practitioners who want to understand *why* a prompt works, not just copy one that does.
 
 ---
@@ -110,7 +112,7 @@ Promptwright is built on a specific body of research. The patterns, anti-pattern
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/promptwright.git
+git clone https://github.com/Howie8erHole/Promptwright.git
 cd promptwright
 
 # Install dependencies

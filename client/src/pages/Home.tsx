@@ -99,6 +99,9 @@ export default function Home() {
                 A structured workbench for crafting, analyzing, and refining LLM prompts.
                 Built on real prompt engineering research.
               </p>
+              <p className="text-xs text-muted-foreground/50 tracking-wide font-medium">
+                by ASSESS LLC
+              </p>
             </div>
 
             {/* Main input */}

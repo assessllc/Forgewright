@@ -7,6 +7,8 @@
  * - Full agent-by-agent system prompt viewer with topology diagrams
  * - Export functionality: copy individual agent prompts or the full swarm as a
  *   structured briefing document for use in Manus, AutoGen, CrewAI, or LangGraph
+ * - A custom swarm builder: define your own agents, pick system prompts from the
+ *   108-example library, choose a topology, and save/export your swarm
  *
  * Sources:
  * - Anthropic "Building Effective Agents" (Dec 2024)
@@ -14,6 +16,8 @@
  */
 
 import { useState, useMemo } from "react";
+import SwarmBuilder, { MySwarms } from "@/components/SwarmBuilder";
+import type { SavedSwarmData } from "@/components/SwarmBuilder";
 import { trpc } from "@/lib/trpc";
 import type { SwarmAgent, SwarmTopology } from "../../../shared/prompitect-types";
 import { Badge } from "@/components/ui/badge";
@@ -413,7 +417,11 @@ function TemplateCard({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+type ComposerMode = "templates" | "build" | "saved";
+
 export default function SwarmComposer() {
+  const [mode, setMode] = useState<ComposerMode>("templates");
+  const [selectedSavedSwarm, setSelectedSavedSwarm] = useState<SavedSwarmData | null>(null);
   const [search, setSearch] = useState("");
   const [topologyFilter, setTopologyFilter] = useState<SwarmTopology | "all">("all");
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
@@ -488,8 +496,8 @@ export default function SwarmComposer() {
                 <Badge variant="outline" className="text-xs border-primary/40 text-primary/80">Beta</Badge>
               </div>
               <p className="text-sm text-muted-foreground max-w-2xl">
-                Design multi-agent prompt systems. Each template provides fully written system prompts for every agent,
-                grounded in published research on orchestration patterns. Export to Manus, AutoGen, CrewAI, or LangGraph.
+                Design multi-agent prompt systems. Browse 8 research-grounded templates, or build your own swarm
+                by defining agents and picking system prompts from the 108-example library.
               </p>
             </div>
           </div>
@@ -507,8 +515,58 @@ export default function SwarmComposer() {
           </div>
         </div>
 
-        {/* Body: two-panel layout */}
+        {/* Mode switcher */}
+        <div className="px-6 pt-4 pb-0 border-b">
+          <div className="flex gap-1">
+            {([
+              { value: "templates" as ComposerMode, label: "Templates", count: "8" },
+              { value: "build" as ComposerMode, label: "Build Your Own", count: null },
+              { value: "saved" as ComposerMode, label: "My Swarms", count: null },
+            ]).map(({ value, label, count }) => (
+              <button
+                key={value}
+                onClick={() => setMode(value)}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                  mode === value
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label}
+                {count && (
+                  <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    {count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Body */}
         <div className="flex flex-1 overflow-hidden">
+          {/* Build Your Own mode */}
+          {mode === "build" && (
+            <div className="flex-1 overflow-hidden">
+              <SwarmBuilder initialSwarm={selectedSavedSwarm} />
+            </div>
+          )}
+
+          {/* My Swarms mode */}
+          {mode === "saved" && (
+            <div className="flex-1 overflow-auto">
+              <MySwarms
+                onLoad={(swarm) => {
+                  setSelectedSavedSwarm(swarm);
+                  setMode("build");
+                }}
+              />
+            </div>
+          )}
+
+          {/* Templates mode — two-panel layout */}
+          {mode === "templates" && (
+          <div className="flex flex-1 overflow-hidden">
           {/* Left: Template Browser */}
           <div className="w-80 flex-shrink-0 border-r flex flex-col">
             <div className="p-3 border-b space-y-2">
@@ -800,6 +858,8 @@ export default function SwarmComposer() {
                 <p className="text-sm">Select a template to view its agents</p>
               </div>
             </div>
+          )}
+          </div>
           )}
         </div>
       </div>
