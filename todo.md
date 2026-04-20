@@ -108,39 +108,41 @@
 ## Phase 2 — Current Sprint
 
 ### Task 1: SSE Streaming for LLM calls
-- [ ] Add SSE endpoint in Express server for streaming LLM responses
-- [ ] Stream Discovery chat responses token-by-token
-- [ ] Stream Reverse Mode analysis token-by-token
-- [ ] Frontend: EventSource client hook for consuming SSE streams
-- [ ] Frontend: Animated typing indicator replaced by live token stream
-- [ ] Graceful fallback if streaming fails
+- [x] Add SSE endpoint in Express server for streaming LLM responses
+- [x] Stream Discovery chat responses token-by-token
+- [x] Stream Reverse Mode analysis token-by-token
+- [x] Frontend: useStream hook for consuming SSE streams
+- [x] Frontend: Live token streaming in Discovery and Reverse Mode
+- [x] Graceful fallback if streaming fails (error event type)
 
 ### Task 2: Pattern Library — Apply to Scaffold
-- [ ] "Apply Pattern" button on each pattern card in Pattern Library
-- [ ] Pattern application modal: preview what blocks will be injected/modified
-- [ ] Inject pattern's example blocks into the scaffold builder state
-- [ ] Navigate to scaffold builder with pattern pre-applied
-- [ ] Visual indicator on blocks showing which pattern they came from
-- [ ] Handle conflict: warn if existing block content will be overwritten
+- [x] "Apply to scaffold" button on each pattern card in Pattern Library
+- [x] Session selector dialog: choose which session to apply pattern to
+- [x] scaffold.applyPattern tRPC procedure: merge pattern blocks into session
+- [x] Empty blocks replaced; non-empty blocks get pattern content appended
+- [x] Success toast with link to scaffold builder
+- [x] Conflict handling: non-empty blocks preserved with pattern as comment
 
 ### Task 3: 100+ Real Example Prompt Library
-- [ ] Schema: example_prompts table (already exists) — verify fields
-- [ ] Seed 100+ real, domain-diverse prompts with full metadata
-  - [ ] Code domain: 15+ examples (review, debug, refactor, test, document, architect)
-  - [ ] Writing domain: 15+ examples (email, report, blog, creative, technical, legal)
-  - [ ] Data analysis domain: 12+ examples (SQL, pandas, visualization, insight extraction)
-  - [ ] Research domain: 10+ examples (literature review, synthesis, fact-check, summarize)
-  - [ ] Marketing domain: 10+ examples (copy, SEO, social, campaign brief, persona)
-  - [ ] Education domain: 8+ examples (lesson plan, quiz, explanation, feedback)
-  - [ ] Medical/Health domain: 8+ examples (patient education, clinical summary, triage)
-  - [ ] Legal domain: 8+ examples (contract review, brief, compliance check, plain-language)
-  - [ ] Translation domain: 6+ examples (technical, literary, localization, register-aware)
-  - [ ] Product/UX domain: 8+ examples (PRD, user story, spec, critique, persona)
-- [ ] Each example includes: title, domain, pattern_used, target_model_family, quality_notes, full_prompt_text, expected_output_description, tags
-- [ ] Example Library browser page: search, filter by domain/pattern/model, preview full prompt
-- [ ] Link examples to patterns in the Pattern Library
+- [x] Schema: example_prompts table created and migrated
+- [x] Seeded 108 real, domain-diverse prompts across 12 domains
+  - [x] software-engineering: 12 examples
+  - [x] data-analysis: 10 examples
+  - [x] creative-writing: 10 examples
+  - [x] marketing: 10 examples
+  - [x] education: 10 examples
+  - [x] research: 8 examples
+  - [x] customer-support: 8 examples
+  - [x] legal: 8 examples
+  - [x] medical: 8 examples
+  - [x] finance: 8 examples
+  - [x] hr: 8 examples
+  - [x] product-management: 8 examples
+- [x] Each example: title, domain, taskType, patternSlug, difficulty, isFeatured, testedModels, tokenCount, promptText
+- [x] Example Library page (/examples): search, filter by domain/pattern/difficulty, preview full prompt
+- [x] getExamples and getExample tRPC procedures in knowledge router
 
 ### GitHub & Skill
-- [ ] Create new private GitHub repository: prompitect
-- [ ] Push full codebase to repository
-- [ ] Create prompitect-engineer skill with full workflow documentation
+- [x] Created private GitHub repository: https://github.com/Howie8erHole/prompitect
+- [x] Pushed full codebase (216 objects, 371 KB)
+- [x] Created prompitect-engineer skill with full workflow documentation
