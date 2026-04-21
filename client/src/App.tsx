@@ -18,6 +18,8 @@ import ModelGuide from "./pages/ModelGuide";
 import Diagnose from "./pages/Diagnose";
 import Compare from "./pages/Compare";
 import Insights from "./pages/Insights";
+import ScaffoldDiff from "./pages/ScaffoldDiff";
+import DiagnosisLibrary from "./pages/DiagnosisLibrary";
 
 function Router() {
   return (
@@ -37,6 +39,8 @@ function Router() {
       <Route path="/diagnose" component={Diagnose} />
       <Route path="/compare" component={Compare} />
       <Route path="/insights" component={Insights} />
+      <Route path="/session/:sessionId/diff/:versionA/:versionB" component={ScaffoldDiff} />
+      <Route path="/diagnosis-library" component={DiagnosisLibrary} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

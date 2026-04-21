@@ -15,6 +15,7 @@ import {
   Stethoscope,
   BarChart2,
   Lightbulb,
+  Library,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ const NAV_ITEMS = [
   { href: "/diagnose", label: "Diagnose Output", icon: Stethoscope },
   { href: "/compare", label: "A/B Compare", icon: BarChart2 },
   { href: "/insights", label: "Insights", icon: Lightbulb },
+  { href: "/diagnosis-library", label: "Diagnosis Library", icon: Library },
 ];
 
 interface AppLayoutProps {
