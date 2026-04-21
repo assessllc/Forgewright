@@ -39,6 +39,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { Link } from "wouter";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import {
   User,
   Cpu,
@@ -51,6 +53,8 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  HelpCircle,
+  PlayCircle,
 } from "lucide-react";
 import JSZip from "jszip";
 
@@ -190,6 +194,7 @@ function ApiKeyRow({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function Settings() {
+  const { restartTour } = useOnboarding();
   const utils = trpc.useUtils();
 
   const { data: prefs, isLoading } = trpc.settings.getPreferences.useQuery();
@@ -592,6 +597,49 @@ export default function Settings() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        </Section>
+
+        {/* Help & Tour section */}
+        <Section
+          icon={HelpCircle}
+          title="Help & Tour"
+          description="Access the full how-to guide, glossary, and interactive tour at any time."
+        >
+          <div className="flex flex-col gap-3">
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
+              <PlayCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">Guided tour</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  A 13-step interactive walkthrough of every page in Forgewright. Resets and replays from the beginning.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs gap-1.5 flex-shrink-0"
+                onClick={restartTour}
+              >
+                <PlayCircle className="w-3 h-3" />
+                Replay tour
+              </Button>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
+              <HelpCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">Help & Glossary</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Page-by-page how-to guide for all 13 pages, plus a full glossary of Forgewright terms.
+                </p>
+              </div>
+              <Link href="/help">
+                <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 flex-shrink-0">
+                  <HelpCircle className="w-3 h-3" />
+                  Open
+                </Button>
+              </Link>
+            </div>
+          </div>
         </Section>
 
       </div>

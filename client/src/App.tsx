@@ -22,6 +22,7 @@ import ScaffoldDiff from "./pages/ScaffoldDiff";
 import DiagnosisLibrary from "@/pages/DiagnosisLibrary";
 import Settings from "@/pages/Settings";
 import Pricing from "@/pages/Pricing";
+import Help from "@/pages/Help";
 
 function Router() {
   return (
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/diagnosis-library" component={DiagnosisLibrary} />
       <Route path="/settings" component={Settings} />
       <Route path="/pricing" component={Pricing} />
+      <Route path="/help" component={Help} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

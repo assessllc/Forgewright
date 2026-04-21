@@ -21,6 +21,7 @@ import {
   Library,
   HelpCircle,
   Settings,
+  CreditCard,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,13 @@ const NAV_ITEMS = [
   { href: "/compare", label: "A/B Compare", icon: BarChart2 },
   { href: "/insights", label: "Insights", icon: Lightbulb },
   { href: "/diagnosis-library", label: "Diagnosis Library", icon: Library },
+];
+
+/** Secondary nav items shown below a divider — settings, help, pricing */
+const SECONDARY_NAV_ITEMS = [
+  { href: "/help", label: "Help & Glossary", icon: HelpCircle },
+  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/pricing", label: "Pricing", icon: CreditCard },
 ];
 
 interface AppLayoutProps {
@@ -107,27 +115,54 @@ export default function AppLayout({ children, title, actions }: AppLayoutProps) 
           })}
         </nav>
 
-        {/* Tour trigger + Settings + ASSESS LLC branding */}
-        <div className="hidden lg:flex flex-col items-center px-3 py-2 gap-1">
-          <button
-            onClick={restartTour}
-            className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors w-full justify-center"
-            aria-label="Take the guided tour"
-          >
-            <HelpCircle className="w-3 h-3" />
-            Take the tour
-          </button>
-          <Link href="/settings" className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors w-full justify-center">
-            <Settings className="w-3 h-3" />
-            Settings
-          </Link>
-          <Link href="/pricing" className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors w-full justify-center">
-            <Zap className="w-3 h-3" />
-            Pricing
-          </Link>
-          <span className="text-[10px] text-muted-foreground/30 tracking-wide font-medium">
-            by ASSESS LLC
-          </span>
+        {/* Secondary nav: Help, Settings, Pricing + divider */}
+        <div className="py-2 px-2 border-t border-sidebar-border/50">
+          {SECONDARY_NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+            const isActive = location.startsWith(href);
+            return (
+              <Tooltip key={href} delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <Link href={href}>
+                    <div
+                      className={cn(
+                        "flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                      )}
+                    >
+                      <Icon className="w-4 h-4 flex-shrink-0" />
+                      <span className="hidden lg:block truncate">{label}</span>
+                    </div>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="lg:hidden">
+                  {label}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+          {/* Tour restart button — same style as nav items */}
+          <Tooltip delayDuration={300}>
+            <TooltipTrigger asChild>
+              <button
+                onClick={restartTour}
+                className="w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                aria-label="Take the guided tour"
+              >
+                <Zap className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden lg:block truncate">Take the tour</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="lg:hidden">
+              Take the tour
+            </TooltipContent>
+          </Tooltip>
+          <div className="hidden lg:block px-2 pt-2 pb-1">
+            <span className="text-[10px] text-muted-foreground/30 tracking-wide font-medium">
+              by ASSESS LLC
+            </span>
+          </div>
         </div>
 
         {/* User */}

@@ -451,3 +451,12 @@
 - [x] All steps target sidebar nav links — tour works from any page without forced navigation
 - [x] "Take the tour" sidebar link still resets and re-triggers the full 13-step tour
 - [x] onboarding.test.ts updated: 2 new contract tests for 13-step count; 300/300 tests passing
+
+## Bug Fix: Onboarding / Settings / Help UX
+
+- [x] Fix: onboarding tour not firing on first load — root cause: localStorage key already set from dev session; "Take the tour" promoted to visible sidebar nav item
+- [x] Fix: Settings page not accessible from sidebar — Settings, Help & Glossary, and Pricing promoted from invisible 10px footer text to proper secondary nav items with icons
+- [x] Build: persistent Help page (/help) — how-to guide for all 13 pages, 18-term glossary, tour replay button at top and bottom
+- [x] Add: Help & Glossary link in sidebar secondary nav (HelpCircle icon) — always visible
+- [x] Add: "Replay tour" button in Settings page Help & Tour section
+- [x] Add: Help & Tour section in Settings page — links to /help and tour replay button
