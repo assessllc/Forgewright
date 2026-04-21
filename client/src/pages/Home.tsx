@@ -29,6 +29,8 @@ import {
   Zap,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { useState as useStateGate } from "react";
+import UpgradePromptModal from "@/components/UpgradePromptModal";
 import {
   SUPPORTED_MODELS,
   MODEL_DISPLAY_NAMES,
@@ -54,9 +56,11 @@ export default function Home() {
   const [promptText, setPromptText] = useState("");
   const [selectedModel, setSelectedModel] = useState<SupportedModel>("claude-3-5-sonnet-20241022");
   const [reverseMode, setReverseMode] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useStateGate(false);
 
   const { data: templates } = trpc.knowledge.getTemplates.useQuery();
   const { data: sessions } = trpc.sessions.list.useQuery({ limit: 5 });
+  const { data: usageGate } = trpc.billing.checkUsageGate.useQuery();
 
   const tokenCount = useMemo(() => estimateTokens(promptText), [promptText]);
   const estimatedCost = useMemo(
@@ -65,6 +69,14 @@ export default function Home() {
   );
 
   function handleStart() {
+    // Check usage gate for Discovery sessions (not Reverse Mode or direct scaffold)
+    if (!reverseMode && !promptText.trim()) {
+      // Starting a Discovery session — check gate
+      if (usageGate && !usageGate.allowed) {
+        setShowUpgrade(true);
+        return;
+      }
+    }
     if (reverseMode) {
       navigate("/reverse");
     } else if (promptText.trim()) {
@@ -83,6 +95,16 @@ export default function Home() {
 
   return (
     <AppLayout>
+      {/* Usage gate modal */}
+      {showUpgrade && usageGate && (
+        <UpgradePromptModal
+          open={showUpgrade}
+          onClose={() => setShowUpgrade(false)}
+          used={usageGate.used ?? 0}
+          limit={usageGate.limit ?? 10}
+          month={'month' in usageGate ? usageGate.month : undefined}
+        />
+      )}
       <div className="min-h-full flex flex-col">
         {/* Hero */}
         <div className="flex-1 flex flex-col items-center justify-center px-4 py-16 lg:py-24">

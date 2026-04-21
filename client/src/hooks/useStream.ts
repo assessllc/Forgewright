@@ -16,11 +16,13 @@ interface StreamEvent {
   text?: string;
   fullText?: string;
   message?: string;
+  /** Optional metadata returned with the done event (e.g. usage stats from test-prompt) */
+  usage?: { inputTokens: number; outputTokens: number; model: string };
 }
 
 interface UseStreamOptions {
   onToken?: (token: string, accumulated: string) => void;
-  onDone?: (fullText: string) => void;
+  onDone?: (fullText: string, meta?: { usage?: { inputTokens: number; outputTokens: number; model: string } }) => void;
   onError?: (message: string) => void;
 }
 
@@ -103,7 +105,7 @@ export function useStream(endpoint: string, options: UseStreamOptions = {}): Use
               } else if (event.type === "done") {
                 const finalText = event.fullText ?? accumulated;
                 setStreamedText(finalText);
-                options.onDone?.(finalText);
+                options.onDone?.(finalText, event.usage ? { usage: event.usage } : undefined);
                 setIsStreaming(false);
                 return finalText;
               } else if (event.type === "error") {

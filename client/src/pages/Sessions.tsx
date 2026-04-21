@@ -15,6 +15,8 @@ import {
   Loader2,
   FileText,
   RotateCcw,
+  Layers,
+  MessageSquare,
 } from "lucide-react";
 import { formatTokens } from "@/lib/tokens";
 import { MODEL_DISPLAY_NAMES, type SupportedModel } from "../../../shared/prompitect-types";
@@ -128,24 +130,45 @@ export default function Sessions() {
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-muted/40 flex items-center justify-center">
-                <FileText className="w-6 h-6 text-muted-foreground" />
-              </div>
-              <div className="text-center space-y-2">
-                <p className="text-sm font-medium text-foreground">
-                  {search ? "No sessions match your search" : "No sessions yet"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {search
-                    ? "Try a different search term"
-                    : "Create your first prompt session from the home screen"}
-                </p>
-              </div>
-              {!search && (
-                <Button onClick={() => navigate("/")} variant="outline" className="gap-2 border-border">
-                  Start Building
-                </Button>
+            <div className="flex flex-col items-center justify-center py-16 space-y-6 max-w-md mx-auto text-center">
+              {search ? (
+                <>
+                  <div className="w-12 h-12 rounded-xl bg-muted/40 flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-foreground">No sessions match your search</p>
+                    <p className="text-xs text-muted-foreground">Try a different search term</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Layers className="w-7 h-7 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-base font-semibold text-foreground">No sessions yet</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Forgewright builds prompts as structured scaffolds — 8 labeled blocks that make
+                      every design decision visible and editable. Start with a description, a template,
+                      or paste output you want to reverse-engineer.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2 w-full">
+                    <Button onClick={() => navigate("/")} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                      <ArrowRight className="w-4 h-4" />
+                      Start your first session
+                    </Button>
+                    <Button onClick={() => navigate("/discovery")} variant="outline" className="gap-2 border-border">
+                      <MessageSquare className="w-4 h-4" />
+                      Start with guided discovery
+                    </Button>
+                    <Button onClick={() => navigate("/reverse")} variant="ghost" className="gap-2 text-muted-foreground">
+                      <RotateCcw className="w-4 h-4" />
+                      Reverse-engineer from output
+                    </Button>
+                  </div>
+                </>
               )}
             </div>
           ) : (

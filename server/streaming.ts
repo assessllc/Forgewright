@@ -45,6 +45,15 @@ interface CompareStreamBody {
   variantPrompt: string;
 }
 
+interface TestPromptStreamBody {
+  /** The fully assembled prompt text to run against the model */
+  promptText: string;
+  /** Optional user-provided input to run the prompt against */
+  userInput?: string;
+  /** Target model identifier (from SUPPORTED_MODELS) */
+  model?: string;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function resolveApiUrl(): string {
@@ -348,6 +357,152 @@ async function handleCompareStream(req: Request, res: Response): Promise<void> {
   await streamLLM(res, variantPrompt, userMessages);
 }
 
+// ─── Test Prompt Streaming ───────────────────────────────────────────────────
+
+/**
+ * /api/stream/test-prompt
+ *
+ * Runs the assembled scaffold prompt against the selected model and streams
+ * the output token-by-token back to the Scaffold Builder's inline output panel.
+ *
+ * The promptText is used as the system prompt. If userInput is provided, it
+ * becomes the user turn; otherwise a minimal "Execute the above prompt." turn
+ * is injected so the model has a user message to respond to.
+ *
+ * Returns usage metadata in the done event for accurate cost display:
+ *   { type: "done", fullText, usage: { inputTokens, outputTokens, model } }
+ */
+async function handleTestPromptStream(req: Request, res: Response): Promise<void> {
+  const body = req.body as TestPromptStreamBody;
+  const promptText = body.promptText?.trim();
+
+  if (!promptText || promptText.length < 10) {
+    res.status(400).json({ error: "promptText must be at least 10 characters" });
+    return;
+  }
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders();
+
+  const userContent = body.userInput?.trim() || "Execute the above prompt and produce the output.";
+  const userMessages: StreamMessage[] = [
+    { role: "user", content: userContent },
+  ];
+
+  // Use the same streamLLM helper but capture usage for cost display.
+  // We extend the done event with usage metadata so the client can show
+  // actual (not estimated) token counts and cost.
+  const messages = [
+    { role: "system" as const, content: promptText },
+    ...userMessages,
+  ];
+
+  const model = body.model ?? "gemini-2.5-flash";
+
+  const payload = {
+    model,
+    messages,
+    stream: true,
+    max_tokens: 4096,
+    stream_options: { include_usage: true },
+  };
+
+  let fetchResponse: globalThis.Response;
+  try {
+    fetchResponse = await fetch(resolveApiUrl(), {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${ENV.forgeApiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    sendSSE(res, { type: "error", message: "Failed to connect to LLM service" });
+    res.end();
+    return;
+  }
+
+  if (!fetchResponse.ok) {
+    const errorText = await fetchResponse.text().catch(() => "Unknown error");
+    sendSSE(res, {
+      type: "error",
+      message: `LLM service error: ${fetchResponse.status} — ${errorText.slice(0, 200)}`,
+    });
+    res.end();
+    return;
+  }
+
+  const reader = fetchResponse.body?.getReader();
+  if (!reader) {
+    sendSSE(res, { type: "error", message: "No response body from LLM service" });
+    res.end();
+    return;
+  }
+
+  const decoder = new TextDecoder();
+  let fullText = "";
+  let buffer = "";
+  let inputTokens = 0;
+  let outputTokens = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed === "data: [DONE]") continue;
+        if (!trimmed.startsWith("data: ")) continue;
+
+        const jsonStr = trimmed.slice(6);
+        try {
+          const chunk = JSON.parse(jsonStr) as {
+            choices?: Array<{
+              delta?: { content?: string };
+              finish_reason?: string;
+            }>;
+            usage?: { prompt_tokens?: number; completion_tokens?: number };
+          };
+
+          const token = chunk.choices?.[0]?.delta?.content ?? "";
+          if (token) {
+            fullText += token;
+            sendSSE(res, { type: "token", text: token });
+          }
+
+          // Capture usage if the provider returns it (some return in final chunk)
+          if (chunk.usage) {
+            inputTokens = chunk.usage.prompt_tokens ?? inputTokens;
+            outputTokens = chunk.usage.completion_tokens ?? outputTokens;
+          }
+        } catch {
+          // Malformed chunk — skip silently
+        }
+      }
+    }
+  } catch (err) {
+    sendSSE(res, { type: "error", message: "Stream interrupted" });
+    res.end();
+    return;
+  }
+
+  sendSSE(res, {
+    type: "done",
+    fullText,
+    usage: { inputTokens, outputTokens, model },
+  });
+  res.end();
+}
+
 // ─── Registration ─────────────────────────────────────────────────────────────
 
 export function registerStreamingRoutes(app: Express): void {
@@ -355,4 +510,5 @@ export function registerStreamingRoutes(app: Express): void {
   app.post("/api/stream/reverse", handleReverseStream);
   app.post("/api/stream/diagnose", handleDiagnoseStream);
   app.post("/api/stream/compare", handleCompareStream);
+  app.post("/api/stream/test-prompt", handleTestPromptStream);
 }

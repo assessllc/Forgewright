@@ -43,6 +43,13 @@
       "when": 1776728044705,
       "tag": "0005_blushing_prima",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1776741713686,
+      "tag": "0006_flashy_microbe",
+      "breakpoints": true
     }
   ]
 }

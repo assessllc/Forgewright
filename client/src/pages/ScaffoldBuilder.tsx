@@ -33,7 +33,13 @@ import {
   X,
   History,
   RotateCcw,
+  Play,
+  StopCircle,
+  Stethoscope,
+  ChevronUp as ChevronUpIcon,
 } from "lucide-react";
+import { useStream } from "@/hooks/useStream";
+import { Streamdown } from "streamdown";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import {
@@ -242,6 +248,25 @@ export default function ScaffoldBuilder() {
     rationale: string;
     blocksModified: string[];
   } | null>(null);
+
+  // Test output panel state
+  const [showTestPanel, setShowTestPanel] = useState(false);
+  const [userInput, setUserInput] = useState("");
+  const [testActualCost, setTestActualCost] = useState<{ inputTokens: number; outputTokens: number; model: string } | null>(null);
+
+  const {
+    stream: runTestStream,
+    isStreaming: isTestStreaming,
+    streamedText: testOutput,
+    error: testError,
+    reset: resetTest,
+  } = useStream("/api/stream/test-prompt", {
+    onDone: (_fullText, meta) => {
+      if (meta?.usage) {
+        setTestActualCost(meta.usage);
+      }
+    },
+  });
 
   // Version history
   const { data: versionList, refetch: refetchVersions } = trpc.sessions.listVersions.useQuery(
@@ -461,6 +486,25 @@ export default function ScaffoldBuilder() {
     navigate(`/variants/${sessionId ?? "new"}`);
   }
 
+  async function handleTestOnModel() {
+    if (!fullPromptText.trim()) {
+      toast.error("Add some content to your scaffold before testing");
+      return;
+    }
+    setShowTestPanel(true);
+    resetTest();
+    setTestActualCost(null);
+    try {
+      await runTestStream({
+        promptText: fullPromptText,
+        userInput: userInput.trim() || undefined,
+        model: targetModel,
+      });
+    } catch {
+      // Error is already surfaced via testError state
+    }
+  }
+
   return (
     <AppLayout
       title={title}
@@ -512,10 +556,126 @@ export default function ScaffoldBuilder() {
             <GitBranch className="w-3.5 h-3.5" />
             Variants
           </Button>
+          <Button
+            size="sm"
+            onClick={handleTestOnModel}
+            disabled={isTestStreaming || !fullPromptText.trim()}
+            className="gap-1.5 text-xs h-8 bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            {isTestStreaming ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Play className="w-3.5 h-3.5" />
+            )}
+            Test on {MODEL_DISPLAY_NAMES[targetModel]?.split(" ")[0] ?? "Model"}
+          </Button>
         </div>
       }
     >
-      <div className="flex h-full overflow-hidden" style={{ height: "calc(100vh - 3.5rem)" }}>
+      {/* Test output panel — slides up from bottom */}
+      {showTestPanel && (
+        <div className="border-t border-border bg-card flex flex-col" style={{ height: "40vh", minHeight: "280px" }}>
+          {/* Panel header */}
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-semibold text-foreground">
+                Test Output — {MODEL_DISPLAY_NAMES[targetModel]}
+              </span>
+              {isTestStreaming && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Streaming…
+                </div>
+              )}
+              {testActualCost && !isTestStreaming && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="font-mono">
+                    {testActualCost.inputTokens > 0
+                      ? `${testActualCost.inputTokens.toLocaleString()} in · ${testActualCost.outputTokens.toLocaleString()} out`
+                      : `~${formatTokens(estimateTokens(testOutput))} tokens`}
+                  </span>
+                  <span>·</span>
+                  <span>
+                    {formatCost(
+                      testActualCost.inputTokens > 0
+                        ? estimateCost(testActualCost.inputTokens, testActualCost.outputTokens, targetModel)
+                        : estimateCost(estimateTokens(fullPromptText), estimateTokens(testOutput), targetModel)
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {testOutput && !isTestStreaming && (
+                <button
+                  onClick={() => {
+                    sessionStorage.setItem("forgewright_diagnose_output", testOutput);
+                    navigate("/diagnose");
+                  }}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Stethoscope className="w-3.5 h-3.5" />
+                  Diagnose this output
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setShowTestPanel(false);
+                  resetTest();
+                  setTestActualCost(null);
+                }}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Close test panel"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Optional user input row */}
+          <div className="flex items-center gap-2 px-4 py-2 border-b border-border/50 flex-shrink-0">
+            <span className="text-xs text-muted-foreground flex-shrink-0">User input:</span>
+            <input
+              type="text"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !isTestStreaming) void handleTestOnModel(); }}
+              placeholder="Optional — leave blank to run the prompt as a system prompt only"
+              className="flex-1 text-xs bg-transparent border-0 text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+              disabled={isTestStreaming}
+            />
+            <button
+              onClick={() => void handleTestOnModel()}
+              disabled={isTestStreaming || !fullPromptText.trim()}
+              className="flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 disabled:opacity-40 transition-colors flex-shrink-0"
+            >
+              {isTestStreaming ? <StopCircle className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+              {isTestStreaming ? "Running…" : "Re-run"}
+            </button>
+          </div>
+
+          {/* Output area */}
+          <div className="flex-1 overflow-y-auto px-4 py-3">
+            {testError ? (
+              <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2">
+                <p className="text-xs text-destructive font-medium">Error</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{testError}</p>
+              </div>
+            ) : testOutput ? (
+              <div className="prose prose-sm prose-invert max-w-none text-sm">
+                <Streamdown>{testOutput}</Streamdown>
+              </div>
+            ) : isTestStreaming ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Waiting for first token…
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
+
+      <div className="flex overflow-hidden" style={{ height: showTestPanel ? "calc(100vh - 3.5rem - 40vh)" : "calc(100vh - 3.5rem)" }}>
         {/* Main scaffold area */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {/* Pattern apply rationale banner */}

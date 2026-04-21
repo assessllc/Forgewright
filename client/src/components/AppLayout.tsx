@@ -1,4 +1,7 @@
 import { Link, useLocation } from "wouter";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import OnboardingTour from "@/components/OnboardingTour";
+import WhatsNewBanner from "@/components/WhatsNewBanner";
 import { cn } from "@/lib/utils";
 import {
   Home,
@@ -16,6 +19,8 @@ import {
   BarChart2,
   Lightbulb,
   Library,
+  HelpCircle,
+  Settings,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -52,6 +57,7 @@ interface AppLayoutProps {
 export default function AppLayout({ children, title, actions }: AppLayoutProps) {
   const [location] = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
+  const { showTour, showWhatsNew, completeTour, restartTour, dismissWhatsNew } = useOnboarding();
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -101,9 +107,25 @@ export default function AppLayout({ children, title, actions }: AppLayoutProps) 
           })}
         </nav>
 
-        {/* ASSESS LLC branding */}
-        <div className="hidden lg:flex items-center justify-center px-3 py-2">
-          <span className="text-[10px] text-muted-foreground/50 tracking-wide font-medium">
+        {/* Tour trigger + Settings + ASSESS LLC branding */}
+        <div className="hidden lg:flex flex-col items-center px-3 py-2 gap-1">
+          <button
+            onClick={restartTour}
+            className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors w-full justify-center"
+            aria-label="Take the guided tour"
+          >
+            <HelpCircle className="w-3 h-3" />
+            Take the tour
+          </button>
+          <Link href="/settings" className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors w-full justify-center">
+            <Settings className="w-3 h-3" />
+            Settings
+          </Link>
+          <Link href="/pricing" className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors w-full justify-center">
+            <Zap className="w-3 h-3" />
+            Pricing
+          </Link>
+          <span className="text-[10px] text-muted-foreground/30 tracking-wide font-medium">
             by ASSESS LLC
           </span>
         </div>
@@ -150,8 +172,14 @@ export default function AppLayout({ children, title, actions }: AppLayoutProps) 
         </div>
       </aside>
 
+      {/* Onboarding tour (driver.js, manages its own DOM) */}
+      <OnboardingTour active={showTour} onFinish={completeTour} />
+
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* What's new banner — shown to returning users on new version */}
+        {showWhatsNew && <WhatsNewBanner onDismiss={dismissWhatsNew} />}
+
         {/* Top bar */}
         {(title || actions) && (
           <header className="h-14 border-b border-border flex items-center px-4 gap-4 flex-shrink-0">

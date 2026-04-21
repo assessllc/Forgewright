@@ -405,3 +405,52 @@
 - [x] Rename app from Promptwright → Forgewright (chosen name, no conflicts found)
 - [x] Update all user-visible references: 19 files updated, 0 TS errors, 194/194 tests pass
 - [ ] Update prompitect-engineer skill with new name (Forgewright)
+
+## Pre-Launch Sprint — Four Features
+
+### Feature 4: Onboarding Flow (BUILD FIRST)
+- [x] First-run detection: check localStorage flag `forgewright_onboarded`; show tour only once
+- [x] 5-step tooltip tour using driver.js: Home input → Discovery → Scaffold Builder → Pattern Library → Reverse Mode
+- [x] Each tooltip: title, 1–2 sentence explanation, "Next" / "Skip tour" controls
+- [x] Tour triggered automatically on first login; also accessible via "Take the tour" link in sidebar footer
+- [x] Tour state persisted in localStorage so it never re-triggers unless user resets
+- [x] "What's new" dismissible banner for returning users after major updates (version-keyed)
+- [x] Empty state on Sessions page for new users: guided CTA to start first session
+- [x] Vitest: onboarding state logic — 15 tests, all passing (onboarding.test.ts)
+
+### Feature 2: "Test on Model" Inline (BUILD SECOND)
+- [x] "Test on [model]" button in Scaffold Builder action bar (exact label, model name dynamic)
+- [x] SSE endpoint: /api/stream/test-prompt — accepts assembled prompt + model, streams output
+- [x] Output panel: slides up from bottom of Scaffold Builder (40vh, no page navigation)
+- [x] Streaming output rendered with Streamdown markdown component
+- [x] Token count + cost display for the actual run (from usage metadata in done event)
+- [x] "Diagnose this output" shortcut button in the output panel → pre-fills /diagnose with output
+- [x] Error handling: model timeout, rate limit, empty prompt
+- [x] Optional user input field — blank = system-prompt-only run; Enter or Re-run button to re-execute
+- [x] Vitest: test-prompt SSE endpoint shape, cost calculation for actual run — 26 tests, all passing (test-prompt.test.ts)
+
+### Feature 1: Settings Page (BUILD THIRD)
+- [x] New page: /settings — "Settings" in sidebar nav (Settings/Gear icon)
+- [x] Section: Default model — dropdown of all 8 supported models, saved to DB, pre-populates Discovery + Scaffold Builder
+- [x] Section: Personal defaults — tone (professional/casual/technical/creative), output format (markdown/plain/json), domain focus (12 domains)
+- [x] Section: API keys — Anthropic/OpenAI/Gemini; encrypted at rest (AES-256-GCM), masked display, replace/remove actions
+- [x] Section: Data export — JSON download (all sessions), Markdown ZIP (one .md per session using JSZip)
+- [x] Section: Profile — display name (editable), email (read-only from OAuth), plan badge, member since
+- [x] Section: Account — delete account with confirmation dialog (hard delete: diagnoses → sessions → user)
+- [x] DB columns added to users table: formatHabit, encryptedApiKeys, displayName, plan, stripeCustomerId, stripeSubscriptionId
+- [x] settingsRouter: getPreferences, updatePreferences, setApiKey, removeApiKey, exportSessionsJson, exportSessionsMarkdown, deleteAccount, getSupportedModels
+- [x] Vitest: encryption round-trip, key masking, preference validation, export shape, model list shape — 30 tests, all passing (settings.test.ts)
+
+### Feature 3: Stripe Usage-Based Monetization (BUILD LAST)
+- [x] Stripe integration via webdev_add_feature stripe
+- [x] Free tier: 10 sessions/month (Discovery sessions created), all features accessible
+- [x] Pro tier: $15/month — unlimited sessions, all features
+- [x] usage_tracking table: userId, month (YYYY-MM), sessionCount, lastUpdated (migrated via scripts/migrate-stripe.mjs)
+- [x] Session creation gate: checkUsageGate procedure; UpgradePromptModal shown when free limit hit
+- [x] Pricing page: /pricing — free vs Pro comparison table, Stripe checkout button, FAQ section, test card note
+- [x] Upgrade prompt modal: shown when free user hits session limit, Stripe checkout CTA, links to /pricing
+- [x] Billing portal: link in Settings page to Stripe customer portal for subscription management
+- [x] Webhook handler: /api/stripe/webhook registered BEFORE express.json(); handles checkout.session.completed, customer.subscription.deleted, customer.subscription.updated
+- [x] user table: plan (free/pro), stripeCustomerId, stripeSubscriptionId columns added via migration
+- [x] Pricing link added to sidebar footer (Zap icon)
+- [x] Vitest: plan definitions, usage gate logic, webhook test event detection, pricing page shape — 33 tests, all passing (stripe.test.ts)

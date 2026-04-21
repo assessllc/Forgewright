@@ -1,4 +1,5 @@
 import {
+  bigint,
   boolean,
   int,
   json,
@@ -22,6 +23,18 @@ export const users = mysqlTable("users", {
   defaultModel: varchar("defaultModel", { length: 64 }).default("gpt-4o"),
   defaultTone: varchar("defaultTone", { length: 64 }).default("professional"),
   defaultDomain: varchar("defaultDomain", { length: 64 }),
+  // Format habit: markdown | plain | json
+  formatHabit: varchar("formatHabit", { length: 32 }).default("markdown"),
+  // Encrypted API keys stored as JSON blob — never logged, never returned to client
+  // Shape: { anthropic?: string, openai?: string, gemini?: string } (AES-256-GCM encrypted)
+  encryptedApiKeys: text("encryptedApiKeys"),
+  // Display name override (separate from OAuth name)
+  displayName: varchar("displayName", { length: 128 }),
+  // Subscription plan: free | pro
+  plan: mysqlEnum("plan", ["free", "pro"]).default("free").notNull(),
+  // Stripe integration fields (populated on checkout.session.completed webhook)
+  stripeCustomerId: varchar("stripeCustomerId", { length: 64 }),
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 64 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -396,3 +409,18 @@ export const comparisonVerdicts = mysqlTable("comparison_verdicts", {
 
 export type ComparisonVerdict = typeof comparisonVerdicts.$inferSelect;
 export type InsertComparisonVerdict = typeof comparisonVerdicts.$inferInsert;
+
+// ─── Stripe: Usage Tracking ───────────────────────────────────────────────────
+// Tracks monthly Discovery session creation counts per user.
+// Used to enforce the free tier limit (10 sessions/month).
+// Keyed on (userId, month) with YYYY-MM format for easy range queries.
+export const usageTracking = mysqlTable("usage_tracking", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  month: varchar("month", { length: 7 }).notNull(), // YYYY-MM
+  sessionCount: int("sessionCount").notNull().default(0),
+  lastUpdated: bigint("lastUpdated", { mode: "number" }).notNull(),
+});
+
+export type UsageTracking = typeof usageTracking.$inferSelect;
+export type InsertUsageTracking = typeof usageTracking.$inferInsert;

@@ -276,7 +276,15 @@ function PatternCard({ pattern }: { pattern: DiagnosisPattern }) {
 
 export default function Diagnose() {
   const [activeTab, setActiveTab] = useState<"diagnose" | "library">("diagnose");
-  const [outputText, setOutputText] = useState("");
+  const [outputText, setOutputText] = useState(() => {
+    // Pre-fill from test panel "Diagnose this output" handoff
+    const prefill = sessionStorage.getItem("forgewright_diagnose_output");
+    if (prefill) {
+      sessionStorage.removeItem("forgewright_diagnose_output");
+      return prefill;
+    }
+    return "";
+  });
   const [promptText, setPromptText] = useState("");
   const [showPromptField, setShowPromptField] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);

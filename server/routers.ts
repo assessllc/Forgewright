@@ -10,7 +10,8 @@ import { swarmsRouter } from "./routers/swarms";
 import { diagnosisRouter } from "./routers/diagnosis";
 import { comparisonRouter } from "./routers/comparison";
 import { insightsRouter } from "./routers/insights";
-
+import { settingsRouter } from "./routers/settings";
+import { billingRouter } from "./routers/billing";
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -29,6 +30,8 @@ export const appRouter = router({
   diagnosis: diagnosisRouter,
   comparison: comparisonRouter,
   insights: insightsRouter,
+  settings: settingsRouter,
+  billing: billingRouter,
 });
 
 export type AppRouter = typeof appRouter;
