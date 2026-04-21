@@ -393,5 +393,5 @@
 
 ### Delivery
 - [x] webdev_save_checkpoint — version 26fb5e87
-- [ ] Push to GitHub — pending
-- [ ] Update prompitect-engineer skill — pending
+- [x] Push to GitHub — 5c4e994 pushed to Howie8erHole/Promptwright
+- [x] Update prompitect-engineer skill — Phase 6 features, 18 pages, 11 tables, graceful skip pattern
