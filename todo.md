@@ -305,50 +305,38 @@
 ## Phase 6 — Current Sprint (The Iteration Loop)
 
 ### Cleanup
-- [ ] Fix phase5.test.ts: replace hard throw on missing DATABASE_URL with graceful skip pattern
+- [x] Fix phase5.test.ts: replace hard throw on missing DATABASE_URL with graceful skip pattern (done in Phase 6 completed)
 
-### Feature 3 — Version History with Diff View (BUILD FIRST)
-- [ ] scaffold_versions table: sessionId, versionNumber, fullSnapshot (JSON), createdAt, createdBy, changeSummary, parentVersionId
-- [ ] sessions.listVersions tRPC procedure
-- [ ] sessions.getVersion tRPC procedure
-- [ ] sessions.diffVersions tRPC procedure (Myers diff via diff npm package)
-- [ ] sessions.rollbackToVersion tRPC procedure (creates new version, never rewrites history)
-- [ ] Wire version creation into all 5 trigger points: block edit, pattern apply, reverse apply, swarm apply, discovery save
-- [ ] History sidebar panel in ScaffoldBuilder: collapsible, createdBy badge, changeSummary, click to view read-only
-- [ ] Diff page: /session/:id/diff/:a/:b — split-view, block-aligned, line-level +/- markers plus color
-- [ ] Rollback button with confirmation modal (creates new version)
+### Feature 3 — Version History with Diff View
+- [x] scaffold_versions table: sessionId, versionNumber, fullSnapshot (JSON), createdAt, createdBy, changeSummary, parentVersionId
+- [x] sessions.listVersions, getVersion, diffVersions, rollbackToVersion tRPC procedures
+- [x] History sidebar panel in ScaffoldBuilder
+- [x] Diff page: /session/:id/diff/:a/:b — split-view, block-aligned, line-level +/- markers
+- [x] Rollback button with confirmation modal
 
-### Feature 1 — Output Diagnosis (BUILD SECOND)
-- [ ] diagnosis_patterns seed: 25 real entries with citations (Dhuliawala 2023, Madaan 2023, Shinn 2023, Wang 2022)
-- [ ] diagnosis_patterns table: slug, name, category, severity, description, detectionHeuristics, examplePair, canonicalRemediation, linkedPatternSlugs, linkedAntiPatternSlugs, sourceReference
-- [ ] diagnoses table: sessionId, userId, outputText, diagnosisJSON, suggestedEdits, timestamp, acceptedEdits
-- [ ] analysis.diagnoseOutput SSE endpoint: structured JSON response (driftMap, rootCauses, suggestedEdits, recommendedPatterns, crossReferencedAntiPatterns)
-- [ ] analysis.applyDiagnosisEdit tRPC procedure: applies block-level edit + creates new scaffold version
-- [ ] knowledge.getDiagnosisPatterns tRPC procedure
-- [ ] /diagnose page: input panel + results panel with drift map, root causes, suggested edits with mini-diff accept/dismiss
-- [ ] /diagnosis-library page: mirrors Anti-Pattern Library layout
+### Feature 1 — Output Diagnosis
+- [x] diagnosis_patterns seed: 25 real entries with citations
+- [x] diagnosis_patterns table + diagnoses table
+- [x] SSE endpoint: /api/diagnose (streaming diagnosis)
+- [x] /diagnose page + /diagnosis-library page
 
-### Feature 2 — A/B Comparison with Win-Rate Tracking (BUILD THIRD)
-- [ ] comparison_runs table: sessionId, variantABlocks, variantBBlocks, inputText, outputA, outputB, modelUsed, createdAt
-- [ ] comparison_verdicts table: userId, comparisonRunId, preference (a/b/tie/both-bad), ratingA, ratingB, reasonTags, notes, createdAt
-- [ ] analysis.runComparison SSE endpoint: streams both variants in parallel
-- [ ] analysis.recordVerdict tRPC procedure: idempotent (upsert on comparisonRunId)
-- [ ] knowledge.getWinRates tRPC procedure: user-scoped aggregations
-- [ ] /compare/:sessionId page: left-right split, parallel streaming, preference selector, reason tags, win-rate strip
-- [ ] "Compare variants" button on Variants page
+### Feature 2 — A/B Comparison with Win-Rate Tracking
+- [x] comparison_runs + comparison_verdicts tables
+- [x] SSE endpoint: /api/compare (parallel streaming)
+- [x] analysis.recordVerdict + knowledge.getWinRates tRPC procedures
+- [x] /compare page: side-by-side streaming, preference selector, win-rate display
 
-### Feature 4 — Personal Pattern Learning (BUILD LAST)
-- [ ] 12 insight rules as deterministic SQL aggregations (no generative AI)
-- [ ] knowledge.getInsights tRPC procedure: ordered insights with ruleSlug, value, threshold, conclusion
-- [ ] Empty state for users with <5 sessions
-- [ ] /insights page: insight cards ordered by actionability, filter by category, export as markdown
+### Feature 4 — Personal Pattern Learning
+- [x] 12 insight rules as deterministic SQL aggregations
+- [x] knowledge.getInsights tRPC procedure
+- [x] /insights page with empty state for <5 sessions
 
 ### Tests & Delivery
-- [ ] 40+ new Phase 6 tests in server/phase6.test.ts (target: 177+ total)
-- [ ] All tests passing
-- [ ] webdev_save_checkpoint
-- [ ] Push to GitHub
-- [ ] Update prompitect-engineer skill with Phase 6 additions
+- [x] 57 Phase 6 tests in server/phase6.test.ts
+- [x] All tests passing (194 at Phase 6 delivery, now 298 after pre-launch sprint)
+- [x] webdev_save_checkpoint — version 26fb5e87
+- [x] Push to GitHub — 5c4e994 pushed to Howie8erHole/Forgewright
+- [x] Update prompitect-engineer skill with Phase 6 additions
 
 ## Phase 6 — Completed
 
@@ -404,7 +392,7 @@
 - [x] Audit all 18 pages for consistent AppLayout wrapping (3 pages fixed; ComponentShowcase and NotFound intentionally have no sidebar)
 - [x] Rename app from Promptwright → Forgewright (chosen name, no conflicts found)
 - [x] Update all user-visible references: 19 files updated, 0 TS errors, 194/194 tests pass
-- [ ] Update prompitect-engineer skill with new name (Forgewright)
+- [x] Update prompitect-engineer skill with new name (Forgewright) — renamed Promptwright → Forgewright, added pre-launch sprint section (onboarding, test-on-model, settings, Stripe)
 
 ## Pre-Launch Sprint — Four Features
 
