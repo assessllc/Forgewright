@@ -64,7 +64,7 @@ export default function AppLayout({ children, title, actions }: AppLayoutProps) 
               <Zap className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="hidden lg:block font-semibold text-sm text-foreground truncate">
-              Promptwright
+              Forgewright
             </span>
           </Link>
         </div>

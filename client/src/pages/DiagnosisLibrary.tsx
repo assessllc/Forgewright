@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
+import AppLayout from "@/components/AppLayout";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -283,9 +284,10 @@ export default function DiagnosisLibrary() {
   }, [patterns]);
 
   return (
-    <div className="flex h-full overflow-hidden">
-      {/* Left sidebar — filters + list */}
-      <div className="w-80 shrink-0 border-r flex flex-col overflow-hidden">
+    <AppLayout>
+      <div className="flex h-full overflow-hidden">
+        {/* Left sidebar — filters + list */}
+        <div className="w-80 shrink-0 border-r flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-4 py-4 border-b shrink-0">
           <div className="flex items-center gap-2 mb-3">
@@ -455,5 +457,6 @@ export default function DiagnosisLibrary() {
         )}
       </div>
     </div>
+    </AppLayout>
   );
 }

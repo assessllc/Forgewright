@@ -1,16 +1,16 @@
-# Promptwright
+# Forgewright
 
-> *A wright is a skilled maker of complex, structured things — a playwright, a wheelwright, a shipwright. Promptwright applies that same craft to the design of language model prompts.*
+> *A wright is a skilled maker of complex, structured things — a playwright, a wheelwright, a shipwright. Forgewright applies that same craft to the design of language model prompts.*
 
 *by [ASSESS LLC](https://assessllc.com)*
 
-**Promptwright** is a structured workbench for crafting, analyzing, and refining prompts for large language models. It is built on real prompt engineering research — not marketing copy — and designed for practitioners who want to understand *why* a prompt works, not just copy one that does.
+**Forgewright** is a structured workbench for crafting, analyzing, and refining prompts for large language models. It is built on real prompt engineering research — not marketing copy — and designed for practitioners who want to understand *why* a prompt works, not just copy one that does.
 
 ---
 
 ## What It Is
 
-Most prompt tools are generators: you describe what you want, they produce something plausible. Promptwright is a **discovery engine first and a generator second**. The distinction matters.
+Most prompt tools are generators: you describe what you want, they produce something plausible. Forgewright is a **discovery engine first and a generator second**. The distinction matters.
 
 A discovery engine helps you understand the design space. It shows you patterns that have been documented in the research literature, examples drawn from real use cases across a dozen domains, and failure modes with detection rules so you can recognize them before they cost you. The generation is downstream of that understanding.
 
@@ -57,7 +57,7 @@ Every discovery session, scaffold, and generated variant is saved. Sessions are 
 
 ## Knowledge Base
 
-The value of Promptwright rests entirely on the quality of its embedded expertise. The knowledge base is built from primary sources and is explicitly not placeholder content.
+The value of Forgewright rests entirely on the quality of its embedded expertise. The knowledge base is built from primary sources and is explicitly not placeholder content.
 
 | Dataset | Count | Sources |
 |---|---|---|
@@ -72,7 +72,7 @@ The value of Promptwright rests entirely on the quality of its embedded expertis
 
 ## Research Foundation
 
-Promptwright is built on a specific body of research. The patterns, anti-patterns, and model notes are grounded in these sources:
+Forgewright is built on a specific body of research. The patterns, anti-patterns, and model notes are grounded in these sources:
 
 - **Wei et al. (2022)** — "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models." The foundational paper establishing that step-by-step reasoning prompts improve performance on complex tasks.
 - **Yao et al. (2022)** — "ReAct: Synergizing Reasoning and Acting in Language Models." The paper introducing the interleaved reasoning-and-action pattern used in agentic workflows.
@@ -112,8 +112,8 @@ Promptwright is built on a specific body of research. The patterns, anti-pattern
 
 ```bash
 # Clone the repository
-git clone https://github.com/Howie8erHole/Promptwright.git
-cd promptwright
+git clone https://github.com/Howie8erHole/Forgewright.git
+cd forgewright
 
 # Install dependencies
 pnpm install
@@ -139,7 +139,7 @@ pnpm dev
 
 ## Project Status
 
-Promptwright is under active development. The current state:
+Forgewright is under active development. The current state:
 
 | Feature | Status |
 |---|---|

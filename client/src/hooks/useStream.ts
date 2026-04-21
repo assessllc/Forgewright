@@ -1,5 +1,5 @@
 /**
- * useStream — React hook for consuming Promptwright SSE streaming endpoints.
+ * useStream — React hook for consuming Forgewright SSE streaming endpoints.
  *
  * Usage:
  *   const { stream, isStreaming, fullText, error } = useStream("/api/stream/discovery");

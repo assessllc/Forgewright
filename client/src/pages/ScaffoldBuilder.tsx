@@ -296,31 +296,31 @@ export default function ScaffoldBuilder() {
 
   // Show rationale banner if arriving from a pattern apply
   useEffect(() => {
-    const stored = sessionStorage.getItem("promptwright_apply_rationale");
+    const stored = sessionStorage.getItem("forgewright_apply_rationale");
     if (stored) {
       try {
         setPatternBanner(JSON.parse(stored) as { patternName: string; rationale: string; blocksModified: string[] });
       } catch { /* ignore */ }
-      sessionStorage.removeItem("promptwright_apply_rationale");
+      sessionStorage.removeItem("forgewright_apply_rationale");
     }
   }, []);
 
   // Load initial prompt from sessionStorage (from Home page)
   useEffect(() => {
     if (!sessionId && !templateSlug) {
-      const initialPrompt = sessionStorage.getItem("promptwright_initial_prompt");
-      const initialModel = sessionStorage.getItem("promptwright_target_model");
+      const initialPrompt = sessionStorage.getItem("forgewright_initial_prompt");
+      const initialModel = sessionStorage.getItem("forgewright_target_model");
       if (initialPrompt) {
         setBlocks((prev) =>
           prev.map((b) =>
             b.id === "task" ? { ...b, content: initialPrompt, enabled: true } : b
           )
         );
-        sessionStorage.removeItem("promptwright_initial_prompt");
+        sessionStorage.removeItem("forgewright_initial_prompt");
       }
       if (initialModel) {
         setTargetModel(initialModel as SupportedModel);
-        sessionStorage.removeItem("promptwright_target_model");
+        sessionStorage.removeItem("forgewright_target_model");
       }
     }
   }, [sessionId, templateSlug]);
@@ -439,7 +439,7 @@ export default function ScaffoldBuilder() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `promptwright-${Date.now()}.${format === "json" ? "json" : "md"}`;
+    a.download = `forgewright-${Date.now()}.${format === "json" ? "json" : "md"}`;
     a.click();
     URL.revokeObjectURL(url);
   }

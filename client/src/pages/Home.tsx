@@ -69,8 +69,8 @@ export default function Home() {
       navigate("/reverse");
     } else if (promptText.trim()) {
       // Store in sessionStorage for the next page to pick up
-      sessionStorage.setItem("promptwright_initial_prompt", promptText);
-      sessionStorage.setItem("promptwright_target_model", selectedModel);
+      sessionStorage.setItem("forgewright_initial_prompt", promptText);
+      sessionStorage.setItem("forgewright_target_model", selectedModel);
       navigate("/scaffold");
     } else {
       navigate("/discovery");
@@ -93,7 +93,7 @@ export default function Home() {
                 <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
                   <Zap className="w-5 h-5 text-primary-foreground" />
                 </div>
-                <span className="text-2xl font-semibold tracking-tight">Promptwright</span>
+                <span className="text-2xl font-semibold tracking-tight">Forgewright</span>
               </div>
               <p className="text-muted-foreground text-base max-w-md mx-auto leading-relaxed">
                 A structured workbench for crafting, analyzing, and refining LLM prompts.

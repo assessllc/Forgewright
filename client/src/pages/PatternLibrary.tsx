@@ -163,7 +163,7 @@ function ApplyPatternDialog({ pattern, onClose }: ApplyPatternDialogProps) {
       // Store rationale in sessionStorage so ScaffoldBuilder can show it as a banner
       if (result.rationale) {
         sessionStorage.setItem(
-          "promptwright_apply_rationale",
+          "forgewright_apply_rationale",
           JSON.stringify({
             patternName: pattern.name,
             rationale: result.rationale,

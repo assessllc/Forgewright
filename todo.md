@@ -1,4 +1,4 @@
-# Promptwright — Project TODO
+# Forgewright — Project TODO
 
 ## Schema & Database
 - [x] Define schema: sessions, scaffold_blocks, prompt_patterns, anti_patterns, model_quirks, domain_scripts
@@ -150,7 +150,7 @@
 ## Phase 3 — Current Sprint
 
 ### Naming
-- [x] Evaluate "Prompitect" vs alternatives; renamed to Promptwright
+- [x] Evaluate "Prompitect" vs alternatives; renamed to Forgewright
 
 ### Scaffold Builder — Provenance Badges
 - [x] Render source field on ScaffoldBlock as a small colored tag in block header
@@ -192,11 +192,11 @@
 - [x] "by ASSESS LLC" added to app sidebar footer
 - [x] "by ASSESS LLC" added to the home page hero
 - [x] "by ASSESS LLC" added to README
-- [x] "Promptwright — by ASSESS LLC" in all swarm export documents
+- [x] "Forgewright — by ASSESS LLC" in all swarm export documents
 
 ### GitHub Repository Rename
-- [x] GitHub repository renamed from prompitect to Promptwright
-- [x] Git remote URL updated to Howie8erHole/Promptwright
+- [x] GitHub repository renamed from prompitect to Forgewright
+- [x] Git remote URL updated to Howie8erHole/Forgewright
 - [x] README clone URL updated
 
 ### Custom Swarm Builder (Example-Picker)
@@ -259,7 +259,7 @@
 ### Tests & Delivery
 - [x] Phase 5 vitest tests: 36 tests (anti-patterns, model guide, ASSESS swarm) — 137/137 total passing
 - [x] webdev_save_checkpoint — version 57080e04
-- [x] Push to GitHub — f841db7..57080e0 pushed to Howie8erHole/Promptwright
+- [x] Push to GitHub — f841db7..57080e0 pushed to Howie8erHole/Forgewright
 - [x] Update prompitect-engineer skill with Phase 5 additions
 
 ## Phase 6 — Feedback Loop & Personal Learning
@@ -393,5 +393,15 @@
 
 ### Delivery
 - [x] webdev_save_checkpoint — version 26fb5e87
-- [x] Push to GitHub — 5c4e994 pushed to Howie8erHole/Promptwright
+- [x] Push to GitHub — 5c4e994 pushed to Howie8erHole/Forgewright
 - [x] Update prompitect-engineer skill — Phase 6 features, 18 pages, 11 tables, graceful skip pattern
+
+## Bug Fixes & Rename — Current Sprint
+
+- [x] Fix navigation trap: DiagnosisLibrary page missing AppLayout sidebar wrapper
+- [x] Fix navigation trap: SwarmComposer page missing AppLayout sidebar wrapper
+- [x] Fix navigation trap: ScaffoldDiff page missing AppLayout sidebar wrapper
+- [x] Audit all 18 pages for consistent AppLayout wrapping (3 pages fixed; ComponentShowcase and NotFound intentionally have no sidebar)
+- [x] Rename app from Promptwright → Forgewright (chosen name, no conflicts found)
+- [x] Update all user-visible references: 19 files updated, 0 TS errors, 194/194 tests pass
+- [ ] Update prompitect-engineer skill with new name (Forgewright)

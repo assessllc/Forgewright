@@ -335,7 +335,7 @@ export const sessionsRouter = router({
         return {
           format: "json" as const,
           content: JSON.stringify(session, null, 2),
-          filename: `promptwright-${session.id}-${Date.now()}.json`,
+          filename: `forgewright-${session.id}-${Date.now()}.json`,
         };
       }
 
@@ -362,7 +362,7 @@ export const sessionsRouter = router({
       return {
         format: "markdown" as const,
         content: md,
-        filename: `promptwright-${session.id}-${Date.now()}.md`,
+        filename: `forgewright-${session.id}-${Date.now()}.md`,
       };
     }),
 

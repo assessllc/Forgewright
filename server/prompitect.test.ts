@@ -1,5 +1,5 @@
 /**
- * Promptwright Core Logic Tests
+ * Forgewright Core Logic Tests
  * Covers: scaffold construction, cost estimation, anti-pattern detection rules,
  * session CRUD shape, and knowledge router response shapes.
  */

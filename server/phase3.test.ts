@@ -1,7 +1,7 @@
 /**
  * phase3.test.ts
  * Tests for Phase 3 features:
- * - App rename to Promptwright
+ * - App rename to Forgewright
  * - Swarm templates data integrity
  * - SwarmAgent type structure
  * - Knowledge router swarm procedures
@@ -15,7 +15,7 @@ const DATABASE_URL = process.env.DATABASE_URL;
 
 // ─── Rename Tests ─────────────────────────────────────────────────────────────
 
-describe("App Rename: Prompitect → Promptwright", () => {
+describe("App Rename: Prompitect → Forgewright", () => {
   it("shared types file does not contain Prompitect branding", async () => {
     const { readFileSync } = await import("fs");
     const content = readFileSync("./shared/prompitect-types.ts", "utf-8");
@@ -24,22 +24,22 @@ describe("App Rename: Prompitect → Promptwright", () => {
     expect(content).not.toContain("Prompitect — Prompt Architect");
   });
 
-  it("AppLayout.tsx contains Promptwright branding", async () => {
+  it("AppLayout.tsx contains Forgewright branding", async () => {
     const { readFileSync } = await import("fs");
     const content = readFileSync("./client/src/components/AppLayout.tsx", "utf-8");
-    expect(content).toContain("Promptwright");
+    expect(content).toContain("Forgewright");
   });
 
-  it("package.json name is promptwright", async () => {
+  it("package.json name is forgewright", async () => {
     const { readFileSync } = await import("fs");
     const pkg = JSON.parse(readFileSync("./package.json", "utf-8"));
-    expect(pkg.name).toBe("promptwright");
+    expect(pkg.name).toBe("forgewright");
   });
 
-  it("README.md exists and contains Promptwright", async () => {
+  it("README.md exists and contains Forgewright", async () => {
     const { readFileSync } = await import("fs");
     const content = readFileSync("./README.md", "utf-8");
-    expect(content).toContain("# Promptwright");
+    expect(content).toContain("# Forgewright");
     expect(content).toContain("prompt engineering");
   });
 });

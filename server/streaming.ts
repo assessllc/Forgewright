@@ -1,5 +1,5 @@
 /**
- * SSE Streaming Module for Promptwright
+ * SSE Streaming Module for Forgewright
  *
  * Provides a raw Express SSE endpoint that streams LLM responses token-by-token.
  * This bypasses tRPC (which buffers full responses) and uses the OpenAI-compatible

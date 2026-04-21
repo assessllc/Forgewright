@@ -1,4 +1,4 @@
-# Promptwright — Session Resume Briefing
+# Forgewright — Session Resume Briefing
 
 *Last updated: end of Phase 5 session*
 
@@ -6,9 +6,9 @@
 
 ## Project Identity
 
-- **App name:** Promptwright
+- **App name:** Forgewright
 - **Brand:** by ASSESS LLC
-- **GitHub:** https://github.com/Howie8erHole/Promptwright
+- **GitHub:** https://github.com/Howie8erHole/Forgewright
 - **Dev URL:** https://3000-ipc3gpo8trczcdwqtao98-6760a638.us1.manus.computer
 - **Project path:** `/home/ubuntu/prompitect`
 - **Latest checkpoint:** `57080e04` (Phase 5 complete)
@@ -57,7 +57,7 @@
 ## What Was Built This Session (Phases 3–5)
 
 ### Phase 3
-- Renamed app from Prompitect → **Promptwright** (all user-visible references)
+- Renamed app from Prompitect → **Forgewright** (all user-visible references)
 - Provenance badges on ScaffoldBuilder blocks (`sourceName` field)
 - Pattern Library auto-navigates to scaffold after apply (rationale banner in scaffold)
 - Swarm Composer: 8 real templates, full agent viewer, topology diagrams, export
@@ -66,7 +66,7 @@
 ### Phase 4
 - Fixed `marketing_lead` routing bug in Business Operations Swarm seed data
 - ASSESS LLC branding: sidebar footer, home page, README, all swarm exports
-- GitHub repository renamed from `prompitect` → `Promptwright`
+- GitHub repository renamed from `prompitect` → `Forgewright`
 - Custom Swarm Builder: "Build Your Own" tab with example-picker modal (108 examples)
 - `custom_swarms` DB table + `swarmsRouter` (list/get/create/update/delete)
 - My Swarms tab: save, load, delete custom swarms

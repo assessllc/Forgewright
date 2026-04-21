@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import AppLayout from "@/components/AppLayout";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -190,6 +191,7 @@ export default function ScaffoldDiff() {
   const unchangedCount = blocks.filter((b) => b.changeType === "unchanged").length;
 
   return (
+    <AppLayout>
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
       <div className="border-b bg-card px-6 py-4 shrink-0">
@@ -325,5 +327,6 @@ export default function ScaffoldDiff() {
         </div>
       )}
     </div>
+    </AppLayout>
   );
 }
