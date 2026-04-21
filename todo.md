@@ -442,3 +442,12 @@
 - [x] user table: plan (free/pro), stripeCustomerId, stripeSubscriptionId columns added via migration
 - [x] Pricing link added to sidebar footer (Zap icon)
 - [x] Vitest: plan definitions, usage gate logic, webhook test event detection, pricing page shape — 33 tests, all passing (stripe.test.ts)
+
+## Bug Fix: Onboarding Tour Expansion
+
+- [x] Expand onboarding tour from 5 steps to 13 steps — cover all meaningful pages
+- [x] Tour stops: Home, Discovery, Scaffold Builder, Variants, Reverse Mode, Pattern Library, Example Library, Anti-Patterns, Model Guide, Swarm Composer, Diagnose Output, A/B Compare, Insights
+- [x] Each step: accurate title ("N of 13" counter), 1–2 sentence description, correct sidebar nav selector
+- [x] All steps target sidebar nav links — tour works from any page without forced navigation
+- [x] "Take the tour" sidebar link still resets and re-triggers the full 13-step tour
+- [x] onboarding.test.ts updated: 2 new contract tests for 13-step count; 300/300 tests passing

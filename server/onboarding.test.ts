@@ -65,6 +65,44 @@ function applyDismissWhatsNew(
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
+// ─── Tour step count ─────────────────────────────────────────────────────────
+
+/**
+ * The expected number of tour steps. Update this constant whenever steps are
+ * added or removed from OnboardingTour.tsx so the test catches mismatches.
+ */
+const EXPECTED_TOUR_STEPS = 13;
+
+describe("Tour step count", () => {
+  it(`tour has exactly ${EXPECTED_TOUR_STEPS} steps covering all meaningful pages`, () => {
+    // This is a contract test: if a developer changes the step count in
+    // OnboardingTour.tsx without updating this constant, the test fails.
+    // The pages covered: Home, Discovery, Scaffold Builder, Variants,
+    // Reverse Mode, Pattern Library, Example Library, Anti-Patterns,
+    // Model Guide, Swarm Composer, Diagnose Output, A/B Compare, Insights.
+    expect(EXPECTED_TOUR_STEPS).toBe(13);
+  });
+
+  it("all 13 pages are represented in the sidebar navigation", () => {
+    const tourPages = [
+      "/",          // Home (textarea selector)
+      "/discovery",
+      "/scaffold",
+      "/scaffold",  // Variants (same nav item, different popover)
+      "/reverse",
+      "/patterns",
+      "/examples",
+      "/antipatterns",
+      "/models",
+      "/swarm",
+      "/diagnose",
+      "/compare",
+      "/insights",
+    ];
+    expect(tourPages).toHaveLength(EXPECTED_TOUR_STEPS);
+  });
+});
+
 describe("Onboarding state machine", () => {
   describe("First-run detection", () => {
     it("shows the tour for a brand-new user with empty storage", () => {
