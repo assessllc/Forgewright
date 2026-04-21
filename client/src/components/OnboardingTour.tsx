@@ -1,5 +1,5 @@
 /**
- * OnboardingTour — 13-step guided tooltip tour using driver.js.
+ * OnboardingTour — 14-step guided tooltip tour using driver.js.
  *
  * Steps walk through every meaningful page in Forgewright:
  *   1.  Home input — describe what you want to build
@@ -11,10 +11,11 @@
  *   7.  Example Library — 108 real, domain-diverse example prompts
  *   8.  Anti-Patterns — 32 failure modes with detection rules
  *   9.  Model Guide — quirks, pricing, and optimization tips for 8 models
- *  10.  Swarm Composer — multi-agent prompt system templates
- *  11.  Diagnose Output — stream-analyze any LLM output for drift and issues
- *  12.  A/B Compare — side-by-side variant comparison with win-rate tracking
- *  13.  Insights — personal pattern learning from your session history
+ *  10.  Sessions — your complete history of saved work
+ *  11.  Swarm Composer — multi-agent prompt system templates
+ *  12.  Diagnose Output — stream-analyze any LLM output for drift and issues
+ *  13.  A/B Compare — side-by-side variant comparison with win-rate tracking
+ *  14.  Insights — personal pattern learning from your session history
  *
  * The tour is triggered by the parent via `active` prop.
  * On complete or skip, `onFinish` is called so the parent can persist state.
@@ -59,7 +60,7 @@ export default function OnboardingTour({ active, onFinish }: OnboardingTourProps
             // Step 1: Home input — the starting point
             element: "textarea",
             popover: {
-              title: "Start here (1 of 13)",
+              title: "Start here (1 of 14)",
               description:
                 "Describe what you want the AI to do — in plain language. Forgewright extracts the specification you didn't know you needed. Leave it blank to start a guided discovery conversation.",
               side: "bottom",
@@ -70,7 +71,7 @@ export default function OnboardingTour({ active, onFinish }: OnboardingTourProps
             // Step 2: Discovery nav item
             element: 'a[href="/discovery"]',
             popover: {
-              title: "Discovery — the AI interview (2 of 13)",
+              title: "Discovery — the AI interview (2 of 14)",
               description:
                 "Discovery interviews you with targeted questions to surface domain, audience, constraints, and success criteria. It auto-detects your domain and applies the right elicitation script. Most users produce a better prompt in 3 minutes here than in 30 minutes writing freehand.",
               side: "right",
@@ -81,7 +82,7 @@ export default function OnboardingTour({ active, onFinish }: OnboardingTourProps
             // Step 3: Scaffold Builder nav item
             element: 'a[href="/scaffold"]',
             popover: {
-              title: "Scaffold Builder — the structured editor (3 of 13)",
+              title: "Scaffold Builder — the structured editor (3 of 14)",
               description:
                 "Your prompt is built as 8 labeled blocks: Role, Context, Task, Constraints, Examples, Format, Reasoning, and Output Validation. Each block is independently editable, togglable, and annotated with token counts. The 'Test on model' button streams a live response directly inside this page.",
               side: "right",
@@ -92,7 +93,7 @@ export default function OnboardingTour({ active, onFinish }: OnboardingTourProps
             // Step 4: Variants — accessible from Scaffold Builder action bar
             element: 'a[href="/scaffold"]',
             popover: {
-              title: "Variants — terse, detailed, chain-of-thought (4 of 13)",
+              title: "Variants — terse, detailed, chain-of-thought (4 of 14)",
               description:
                 "From the Scaffold Builder, use 'Generate variants' to produce three rewritten versions of your prompt: Terse (stripped to essentials), Detailed (fully elaborated), and Chain-of-Thought (reasoning steps made explicit). Compare them side-by-side before choosing one.",
               side: "right",
@@ -103,7 +104,7 @@ export default function OnboardingTour({ active, onFinish }: OnboardingTourProps
             // Step 5: Reverse Mode nav item
             element: 'a[href="/reverse"]',
             popover: {
-              title: "Reverse Mode — work backwards from output (5 of 13)",
+              title: "Reverse Mode — work backwards from output (5 of 14)",
               description:
                 "Paste any output you admire — an article, a code snippet, an analysis. Forgewright reverse-engineers the prompt structure that would produce something like it, and populates your scaffold automatically. The fastest way to learn what good prompts look like.",
               side: "right",
@@ -114,7 +115,7 @@ export default function OnboardingTour({ active, onFinish }: OnboardingTourProps
             // Step 6: Pattern Library nav item
             element: 'a[href="/patterns"]',
             popover: {
-              title: "Pattern Library — 22 documented techniques (6 of 13)",
+              title: "Pattern Library — 22 documented techniques (6 of 14)",
               description:
                 "22 prompt patterns drawn from published research — Chain-of-Thought, Few-Shot, ReAct, Self-Critique, Constitutional, Decomposition, and more. Each has a description, when-to-use guidance, source citations, and a one-click 'Apply to Scaffold' action.",
               side: "right",
@@ -125,7 +126,7 @@ export default function OnboardingTour({ active, onFinish }: OnboardingTourProps
             // Step 7: Example Library nav item
             element: 'a[href="/examples"]',
             popover: {
-              title: "Example Library — 108 real prompts (7 of 13)",
+              title: "Example Library — 108 real prompts (7 of 14)",
               description:
                 "108 real, tested example prompts across 12 domains: software engineering, data analysis, creative writing, marketing, education, research, legal, medical, finance, HR, customer support, and product management. Filter by domain, pattern, or difficulty. Use any example as a starting point for your scaffold.",
               side: "right",
@@ -136,7 +137,7 @@ export default function OnboardingTour({ active, onFinish }: OnboardingTourProps
             // Step 8: Anti-Patterns nav item
             element: 'a[href="/antipatterns"]',
             popover: {
-              title: "Anti-Patterns — 32 failure modes (8 of 13)",
+              title: "Anti-Patterns — 32 failure modes (8 of 14)",
               description:
                 "32 documented prompt failure modes with detection rules, severity ratings, and remediation guidance. The Scaffold Builder runs these rules in real time and flags issues as you type. This page lets you browse the full catalog and understand why certain prompt structures fail.",
               side: "right",
@@ -147,7 +148,7 @@ export default function OnboardingTour({ active, onFinish }: OnboardingTourProps
             // Step 9: Model Guide nav item
             element: 'a[href="/models"]',
             popover: {
-              title: "Model Guide — quirks for 8 models (9 of 13)",
+              title: "Model Guide — quirks for 8 models (9 of 14)",
               description:
                 "Behavior notes, pricing, context windows, and optimization tips for Claude 3.5 Sonnet, Claude 3 Opus, GPT-4o, GPT-4o mini, o1, Gemini 1.5 Pro, Mistral Large, and Llama 3 70B. Includes a cost calculator so you can compare per-run costs before committing to a model.",
               side: "right",
@@ -155,10 +156,21 @@ export default function OnboardingTour({ active, onFinish }: OnboardingTourProps
             },
           },
           {
-            // Step 10: Swarm Composer nav item
+            // Step 10: Sessions nav item — your saved work history
+            element: 'a[href="/sessions"]',
+            popover: {
+              title: "Sessions — your complete work history (10 of 14)",
+              description:
+                "Every Discovery session you start is saved here automatically. Each session stores its scaffold, full version history, associated diagnoses, and comparison runs. Pick up where you left off at any time, or branch a session into a new direction without losing the original.",
+              side: "right",
+              align: "start",
+            },
+          },
+          {
+            // Step 11: Swarm Composer nav item
             element: 'a[href="/swarm"]',
             popover: {
-              title: "Swarm Composer — multi-agent systems (10 of 13)",
+              title: "Swarm Composer — multi-agent systems (11 of 14)",
               description:
                 "Browse 9 production-ready multi-agent prompt templates — content pipelines, software dev teams, market research swarms, and more. Or build your own: define agents, assign roles and system prompts, choose a topology (sequential, parallel, hub-spoke, hierarchical, iterative), and export a deployment briefing.",
               side: "right",
@@ -166,10 +178,10 @@ export default function OnboardingTour({ active, onFinish }: OnboardingTourProps
             },
           },
           {
-            // Step 11: Diagnose Output nav item
+            // Step 12: Diagnose Output nav item
             element: 'a[href="/diagnose"]',
             popover: {
-              title: "Diagnose Output — analyze any LLM response (11 of 13)",
+              title: "Diagnose Output — analyze any LLM response (12 of 14)",
               description:
                 "Paste any LLM output and Forgewright streams a structured diagnosis: drift from your intended prompt, root causes, pattern matches against 25 diagnosis patterns, and suggested block-level edits. The 'Diagnose this output' button in the Test on Model panel sends you here automatically.",
               side: "right",
@@ -177,10 +189,10 @@ export default function OnboardingTour({ active, onFinish }: OnboardingTourProps
             },
           },
           {
-            // Step 12: A/B Compare nav item
+            // Step 13: A/B Compare nav item
             element: 'a[href="/compare"]',
             popover: {
-              title: "A/B Compare — side-by-side with win-rate tracking (12 of 13)",
+              title: "A/B Compare — side-by-side with win-rate tracking (13 of 14)",
               description:
                 "Run two prompt variants against the same input simultaneously and watch both responses stream side-by-side. Record your preference (A wins / B wins / tie / both bad) with optional reason tags. Win rates accumulate across sessions so you can see which patterns consistently outperform others.",
               side: "right",
@@ -188,10 +200,10 @@ export default function OnboardingTour({ active, onFinish }: OnboardingTourProps
             },
           },
           {
-            // Step 13: Insights nav item
+            // Step 14: Insights nav item
             element: 'a[href="/insights"]',
             popover: {
-              title: "Insights — your personal pattern data (13 of 13)",
+              title: "Insights — your personal pattern data (14 of 14)",
               description:
                 "12 deterministic rules run against your session history to surface actionable insights: which blocks you use most, which patterns you apply, your average prompt length, anti-pattern hit rate, and more. No generative AI — just honest aggregations from your own data. Unlocks after 5 sessions.",
               side: "right",

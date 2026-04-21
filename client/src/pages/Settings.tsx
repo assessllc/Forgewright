@@ -611,7 +611,7 @@ export default function Settings() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">Guided tour</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  A 13-step interactive walkthrough of every page in Forgewright. Resets and replays from the beginning.
+                  A 14-step interactive walkthrough of every page in Forgewright. Resets and replays from the beginning.
                 </p>
               </div>
               <Button
@@ -629,7 +629,7 @@ export default function Settings() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">Help & Glossary</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Page-by-page how-to guide for all 13 pages, plus a full glossary of Forgewright terms.
+                  Page-by-page how-to guide for all 14 pages, plus a full glossary of Forgewright terms.
                 </p>
               </div>
               <Link href="/help">

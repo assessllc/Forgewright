@@ -460,3 +460,9 @@
 - [x] Add: Help & Glossary link in sidebar secondary nav (HelpCircle icon) — always visible
 - [x] Add: "Replay tour" button in Settings page Help & Tour section
 - [x] Add: Help & Tour section in Settings page — links to /help and tour replay button
+
+## Tour: Add Sessions stop (step 10 of 14)
+
+- [x] Add Sessions as step 10 in OnboardingTour — between Model Guide and Swarm Composer
+- [x] Update all "N of 13" counters to "N of 14" (OnboardingTour, Help.tsx, Settings.tsx)
+- [x] Update onboarding.test.ts step count assertion from 13 to 14 — 300/300 tests passing

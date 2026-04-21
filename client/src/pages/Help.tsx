@@ -360,7 +360,7 @@ export default function Help() {
             className="gap-2 mt-2"
           >
             <PlayCircle className="w-4 h-4" />
-            Replay the guided tour (13 steps)
+            Replay the guided tour (14 steps)
           </Button>
         </div>
 
@@ -479,7 +479,7 @@ export default function Help() {
           <div>
             <p className="text-sm font-semibold text-foreground">Prefer an interactive walkthrough?</p>
             <p className="text-sm text-muted-foreground mt-0.5">
-              The guided tour walks you through all 13 pages with contextual tooltips.
+              The guided tour walks you through all 14 pages with contextual tooltips.
             </p>
           </div>
           <Button onClick={restartTour} size="sm" className="gap-2 flex-shrink-0">

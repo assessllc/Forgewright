@@ -71,7 +71,7 @@ function applyDismissWhatsNew(
  * The expected number of tour steps. Update this constant whenever steps are
  * added or removed from OnboardingTour.tsx so the test catches mismatches.
  */
-const EXPECTED_TOUR_STEPS = 13;
+const EXPECTED_TOUR_STEPS = 14;
 
 describe("Tour step count", () => {
   it(`tour has exactly ${EXPECTED_TOUR_STEPS} steps covering all meaningful pages`, () => {
@@ -80,10 +80,10 @@ describe("Tour step count", () => {
     // The pages covered: Home, Discovery, Scaffold Builder, Variants,
     // Reverse Mode, Pattern Library, Example Library, Anti-Patterns,
     // Model Guide, Swarm Composer, Diagnose Output, A/B Compare, Insights.
-    expect(EXPECTED_TOUR_STEPS).toBe(13);
+    expect(EXPECTED_TOUR_STEPS).toBe(14);
   });
 
-  it("all 13 pages are represented in the sidebar navigation", () => {
+  it("all 14 pages are represented in the sidebar navigation", () => {
     const tourPages = [
       "/",          // Home (textarea selector)
       "/discovery",
@@ -94,6 +94,7 @@ describe("Tour step count", () => {
       "/examples",
       "/antipatterns",
       "/models",
+      "/sessions",  // Sessions — added in 14-step expansion
       "/swarm",
       "/diagnose",
       "/compare",
