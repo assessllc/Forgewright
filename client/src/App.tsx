@@ -4,7 +4,8 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+import LandingPage from "./pages/LandingPage";
+import AppHome from "./pages/AppHome";
 import Discovery from "./pages/Discovery";
 import ScaffoldBuilder from "./pages/ScaffoldBuilder";
 import Variants from "./pages/Variants";
@@ -23,11 +24,16 @@ import DiagnosisLibrary from "@/pages/DiagnosisLibrary";
 import Settings from "@/pages/Settings";
 import Pricing from "@/pages/Pricing";
 import Help from "@/pages/Help";
+import Terms from "@/pages/Terms";
+import Privacy from "@/pages/Privacy";
+import SecurityPage from "@/pages/Security";
+import Contact from "@/pages/Contact";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={LandingPage} />
+      <Route path="/app" component={AppHome} />
       <Route path="/discovery" component={Discovery} />
       <Route path="/scaffold" component={ScaffoldBuilder} />
       <Route path="/scaffold/:sessionId" component={ScaffoldBuilder} />
@@ -47,6 +53,10 @@ function Router() {
       <Route path="/settings" component={Settings} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/help" component={Help} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/security" component={SecurityPage} />
+      <Route path="/contact" component={Contact} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

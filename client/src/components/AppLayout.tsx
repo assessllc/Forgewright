@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/tooltip";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Home", icon: Home },
+  { href: "/app", label: "Home", icon: Home },
   { href: "/discovery", label: "Discovery", icon: MessageSquare },
   { href: "/scaffold", label: "Scaffold Builder", icon: Layers },
   { href: "/patterns", label: "Pattern Library", icon: BookOpen },
@@ -73,7 +73,7 @@ export default function AppLayout({ children, title, actions }: AppLayoutProps) 
       <aside className="w-14 lg:w-56 flex-shrink-0 border-r border-border bg-sidebar flex flex-col">
         {/* Logo */}
         <div className="h-14 flex items-center px-3 lg:px-4 border-b border-sidebar-border">
-          <Link href="/" className="flex items-center gap-2.5 min-w-0">
+          <Link href="/app" className="flex items-center gap-2.5 min-w-0">
             <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
               <Zap className="w-4 h-4 text-primary-foreground" />
             </div>
@@ -87,8 +87,8 @@ export default function AppLayout({ children, title, actions }: AppLayoutProps) 
         <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const isActive =
-              href === "/"
-                ? location === "/"
+              href === "/app"
+                ? location === "/app"
                 : location.startsWith(href);
             return (
               <Tooltip key={href} delayDuration={300}>

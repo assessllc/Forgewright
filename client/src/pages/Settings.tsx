@@ -639,6 +639,16 @@ export default function Settings() {
                 </Button>
               </Link>
             </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30">
+              <span className="text-primary mt-0.5 flex-shrink-0 text-base leading-none">✉</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">Product support</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  For bug reports, billing questions, and account issues, email{" "}
+                  <a href="mailto:support@forgewright.app" className="text-primary hover:underline">support@forgewright.app</a>.
+                </p>
+              </div>
+            </div>
           </div>
         </Section>
 

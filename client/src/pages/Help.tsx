@@ -4,7 +4,7 @@
  * A persistent, always-accessible reference covering:
  *   1. Quick-start guide (5-step workflow)
  *   2. Page-by-page how-to guide for all 13 meaningful pages
- *   3. Full glossary of Forgewright terms
+ *   3. Glossary of 9 key Forgewright terms
  *   4. Tour replay button
  *
  * No auth required — public page.
@@ -248,92 +248,47 @@ const GLOSSARY_TERMS = [
   {
     term: "Scaffold",
     definition:
-      "A prompt broken into 8 labeled blocks (Role, Context, Task, Constraints, Examples, Format, Reasoning, Output Validation). The scaffold is the core unit of work in Forgewright — every session produces one.",
+      "A prompt broken into 8 labeled blocks: Role, Context, Task, Constraints, Examples, Format, Reasoning, and Output Validation. The scaffold is the core unit of work in Forgewright — every session produces one.",
   },
   {
-    term: "Block",
+    term: "Scaffold blocks",
     definition:
-      "One of the 8 sections of a scaffold. Each block is independently editable, togglable, and contributes to the total token count. Disabled blocks are excluded from the assembled prompt.",
-  },
-  {
-    term: "Session",
-    definition:
-      "A saved unit of work containing a scaffold, its version history, associated discovery answers, and any diagnoses or comparisons run against it. Sessions persist indefinitely in your account.",
+      "The 8 named sections of a scaffold: Role (who the model is), Context (background information), Task (what to do), Constraints (what not to do), Examples (few-shot demonstrations), Format (output structure), Reasoning (chain-of-thought instructions), and Output Validation (self-check criteria). Each block is independently editable and togglable.",
   },
   {
     term: "Discovery",
     definition:
-      "The AI interview mode that extracts your domain, audience, constraints, and success criteria through targeted questions. Discovery auto-detects your domain and applies the appropriate elicitation script.",
-  },
-  {
-    term: "Elicitation script",
-    definition:
-      "A domain-specific set of questions used during Discovery to surface the information most relevant to that domain. Forgewright ships with 15 elicitation scripts covering software engineering, data analysis, creative writing, and more.",
+      "The AI interview mode that extracts your domain, audience, constraints, and success criteria through targeted questions before you write a single prompt word. Discovery auto-detects your domain and applies the appropriate elicitation script.",
   },
   {
     term: "Pattern",
     definition:
-      "A documented, reusable prompt technique drawn from published research. Examples: Chain-of-Thought, Few-Shot, ReAct, Self-Critique. Patterns can be applied to any scaffold with one click.",
+      "A documented, reusable prompt technique drawn from published research — for example, Chain-of-Thought (Wei et al. 2022), Few-Shot, ReAct, Self-Critique, or Structured Output. Patterns can be applied to any scaffold with one click from the Pattern Library.",
   },
   {
     term: "Anti-pattern",
     definition:
-      "A documented prompt failure mode — a structural or content choice that reliably degrades model output. Forgewright ships with 32 anti-patterns and runs them as live linting rules in the Scaffold Builder.",
-  },
-  {
-    term: "Diagnosis pattern",
-    definition:
-      "A documented output failure mode used by the Diagnose Output page. Distinct from prompt anti-patterns: diagnosis patterns describe problems in the model's response, not the prompt itself.",
-  },
-  {
-    term: "Drift",
-    definition:
-      "The degree to which a model's output diverges from what the prompt intended. The Diagnose Output page measures drift by comparing the output against the original prompt's stated task, constraints, and format.",
-  },
-  {
-    term: "Variant",
-    definition:
-      "A rewritten version of a scaffold produced by the Variants feature. Three variants are generated: Terse (stripped to essentials), Detailed (fully elaborated), and Chain-of-Thought (reasoning steps made explicit).",
+      "A documented prompt failure mode — a structural or content choice that reliably degrades model output. Forgewright ships with 32 anti-patterns and runs them as live linting rules in the Scaffold Builder. A related concept, the diagnosis pattern, describes failure modes in the model's output rather than the prompt itself — see the Diagnosis Library.",
   },
   {
     term: "Reverse Mode",
     definition:
-      "A workflow where you start from output you admire and work backwards to reconstruct the prompt structure that would produce it. Forgewright decomposes the output into scaffold blocks automatically.",
+      "A workflow where you start from output you admire and work backwards to reconstruct the prompt structure that would produce it. Paste any model output and Forgewright decomposes it into scaffold blocks automatically.",
   },
   {
     term: "Swarm",
     definition:
-      "A multi-agent prompt system where multiple AI agents with distinct roles collaborate on a task. Forgewright's Swarm Composer lets you design, save, and export swarm configurations.",
-  },
-  {
-    term: "Topology",
-    definition:
-      "The communication pattern between agents in a swarm. Forgewright supports five topologies: Sequential (A→B→C), Parallel (all agents run simultaneously), Hub-Spoke (one coordinator routes to specialists), Hierarchical (manager delegates to sub-agents), and Iterative (agents refine each other's output in cycles).",
+      "A multi-agent prompt system where multiple AI agents with distinct roles collaborate on a task. Forgewright's Swarm Composer lets you design, configure, and export swarm systems using five communication topologies: Sequential, Parallel, Hub-Spoke, Hierarchical, and Iterative.",
   },
   {
     term: "Token",
     definition:
-      "The unit of text that language models process. Approximately 4 characters per token for English text. Forgewright estimates token counts for every scaffold and displays the cost estimate for each supported model.",
+      "The unit of text that language models process. Approximately 4 characters per token for English text. Forgewright estimates token counts for every scaffold and displays the cost estimate for each supported model in real time.",
   },
   {
-    term: "Win rate",
+    term: "Session",
     definition:
-      "The percentage of A/B comparisons in which a particular variant or pattern was preferred. Tracked in the A/B Compare page and surfaced in Insights.",
-  },
-  {
-    term: "Version history",
-    definition:
-      "A complete audit trail of every change made to a scaffold, automatically captured at each edit, pattern application, or reverse-mode import. You can view any past version and roll back to it at any time.",
-  },
-  {
-    term: "Free tier",
-    definition:
-      "The default plan: 10 Discovery sessions per month, all features accessible. No credit card required.",
-  },
-  {
-    term: "Pro tier",
-    definition:
-      "The paid plan at $15/month: unlimited Discovery sessions, all features. Upgrade from the Pricing page.",
+      "A saved unit of work containing a scaffold, its full version history, associated discovery answers, and any diagnoses or comparison runs. Sessions persist indefinitely in your account and can be exported as JSON or Markdown.",
   },
 ];
 
@@ -472,6 +427,16 @@ export default function Help() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Contact */}
+        <section className="rounded-lg border border-border bg-card px-6 py-5">
+          <h2 className="text-sm font-semibold text-foreground mb-1">Need more help?</h2>
+          <p className="text-sm text-muted-foreground">
+            For product questions, bug reports, and billing issues, email{" "}
+            <a href="mailto:support@forgewright.app" className="text-primary hover:underline font-medium">support@forgewright.app</a>.
+            We aim to respond within 2 business days.
+          </p>
         </section>
 
         {/* Bottom tour CTA */}

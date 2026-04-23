@@ -466,3 +466,43 @@
 - [x] Add Sessions as step 10 in OnboardingTour — between Model Guide and Swarm Composer
 - [x] Update all "N of 13" counters to "N of 14" (OnboardingTour, Help.tsx, Settings.tsx)
 - [x] Update onboarding.test.ts step count assertion from 13 to 14 — 300/300 tests passing
+
+## Pre-Launch Brief — Four Deliverables (strict build order)
+
+### Deliverable 3: Terms of Service, Privacy Policy, Security Page
+- [x] /terms page: fully populated with Forgewright-specific facts (ASSESS LLC, Hawai'i, $15/month Pro, Stripe billing, LLM providers, hard-delete on account deletion)
+- [x] /privacy page: fully populated (AES-256-GCM API keys, PostgreSQL session data, Stripe payment handling, GDPR/CCPA acknowledgment)
+- [x] /security page: encryption at rest/in transit, Manus OAuth, Stripe payment security, data handling, responsible disclosure
+- [x] Each page includes "Last updated: April 22, 2026" date and "DRAFT — Pending attorney review" notice
+- [x] Internal note in /docs/legal-status.md: attorney review required within 30 days of launch (open action item)
+- [x] All three pages accessible without login, rendered outside AppLayout (no sidebar)
+- [x] Routes registered in App.tsx
+
+### Deliverable 4: Email Address Surfacing
+- [x] /terms: admin@forgewright.app as contact for legal notices
+- [x] /privacy: admin@forgewright.app as contact for privacy inquiries, data access, deletion requests
+- [x] /security: admin@forgewright.app as contact for responsible disclosure
+- [x] /help: support@forgewright.app as contact for product help, bug reports, billing questions
+- [x] Settings page Help & Tour section: support@forgewright.app for account/product issues
+- [x] /contact page: lists all three addresses with one-line role descriptions
+- [ ] DNS setup guide document for user: Cloudflare no-reply@ alias + Resend SPF/DKIM/DMARC records (pending — user must configure in Cloudflare)
+
+### Deliverable 2: Help Page Audit and Glossary Trim
+- [x] Audit document at /docs/help-audit.md: all 18 terms reviewed with keep/remove/merge recommendation
+- [x] Glossary trimmed from 18 terms to 9 terms
+- [x] All references to "18 terms" updated across Help.tsx, Settings.tsx
+
+### Deliverable 1: Public Landing Page
+- [x] Landing page at / (root) — accessible without login; app moved to /app
+- [x] Hero: headline/subhead, two CTAs (Start Free / Sign In), ASSESS LLC attribution
+- [x] Problem section: three prose paragraphs
+- [x] How-it-works: three columns (Discover / Build / Refine)
+- [x] "Why craft matters" section: full-width
+- [x] Capabilities grid: 8 cards with real feature descriptions (counts match actual DB state)
+- [x] "Who it's for": four user types
+- [x] Pricing section: Free vs Pro comparison
+- [x] FAQ: 7 questions with honest answers
+- [x] Footer: three columns (Product / Company / Legal) + ASSESS LLC attribution
+- [x] Dark theme matching app; responsive (desktop, tablet, mobile)
+- [x] No fabricated testimonials, logos, or statistics
+- [x] All footer links route to real pages (ToS, Privacy, Security, Contact)
