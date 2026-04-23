@@ -485,7 +485,7 @@
 - [x] /help: support@forgewright.app as contact for product help, bug reports, billing questions
 - [x] Settings page Help & Tour section: support@forgewright.app for account/product issues
 - [x] /contact page: lists all three addresses with one-line role descriptions
-- [ ] DNS setup guide document for user: Cloudflare no-reply@ alias + Resend SPF/DKIM/DMARC records (pending — user must configure in Cloudflare)
+- [x] DNS setup guide document for user: Cloudflare no-reply@ alias + Resend SPF/DKIM/DMARC records — written at /docs/dns-email-setup.md; user must complete the Cloudflare + Resend steps, then provide RESEND_API_KEY secret
 
 ### Deliverable 2: Help Page Audit and Glossary Trim
 - [x] Audit document at /docs/help-audit.md: all 18 terms reviewed with keep/remove/merge recommendation
